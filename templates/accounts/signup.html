@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registro - OnlyCubans{% endblock %}
+
+{% block body_class %}signup-page{% endblock %}
+
+{% block content %}
+<div class="signup-container">
+    <div class="signup-wrapper">
+        <div class="signup-left">
+            <div class="signup-brand">
+                <h1><i class="fas fa-cube"></i> OnlyCubans</h1>
+                <p>Únete a la comunidad de creadores cubanos y descubre contenido exclusivo</p>
+            </div>
+            <div class="signup-features">
+                <div class="feature-item">
+                    <i class="fas fa-star"></i>
+                    <span>Accede a contenido premium</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-video"></i>
+                    <span>Publica y monetiza tu contenido</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-users"></i>
+                    <span>Conecta con la comunidad cubana</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Plataforma segura y confiable</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="signup-right">
+            <div class="signup-form-container">
+                <h2>Crear Cuenta</h2>
+                <p class="signup-subtitle">Únete a OnlyCubans en menos de un minuto</p>
+                
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Por favor, corrige los errores en el formulario.
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <form method="post" class="signup-form">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_first_name">Nombre</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" name="first_name" id="id_first_name" class="form-control" 
+                                           placeholder="Tu nombre" value="{{ form.first_name.value|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_last_name">Apellido</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" name="last_name" id="id_last_name" class="form-control" 
+                                           placeholder="Tu apellido" value="{{ form.last_name.value|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_username">Nombre de usuario *</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-at"></i></span>
+                            <input type="text" name="username" id="id_username" class="form-control" 
+                                   placeholder="Elige un nombre de usuario" required 
+                                   value="{{ form.username.value|default:'' }}">
+                        </div>
+                        <small class="form-text text-muted">Este será tu nombre público en la plataforma.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_email">Correo electrónico *</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" name="email" id="id_email" class="form-control" 
+                                   placeholder="tu@email.com" required 
+                                   value="{{ form.email.value|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_password1">Contraseña *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" name="password1" id="id_password1" class="form-control" 
+                                           placeholder="Crea una contraseña" required>
+                                    <button type="button" class="btn btn-outline-secondary toggle-password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Mínimo 8 caracteres, con números y letras.
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_password2">Confirmar contraseña *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" name="password2" id="id_password2" class="form-control" 
+                                           placeholder="Repite tu contraseña" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_user_type">Tipo de cuenta *</label>
+                        <select name="user_type" id="id_user_type" class="form-select" required>
+                            <option value="">Selecciona tu tipo de cuenta</option>
+                            <option value="regular" {% if form.user_type.value == 'regular' %}selected{% endif %}>Usuario Regular</option>
+                            <option value="creator" {% if form.user_type.value == 'creator' %}selected{% endif %}>Creador de Contenido</option>
+                        </select>
+                        <small class="form-text text-muted">
+                            Los creadores de contenido pueden publicar y monetizar su trabajo.
+                        </small>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        <input type="checkbox" class="form-check-input" id="id_terms" required>
+                        <label class="form-check-label" for="id_terms">
+                            Acepto los <a href="#" class="terms-link">Términos de Servicio</a> y la <a href="#" class="terms-link">Política de Privacidad</a>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-signup">Crear Cuenta</button>
+                </form>
+                
+                <div class="separator">
+                    <span>o regístrate con</span>
+                </div>
+                
+                <div class="social-signup">
+                    <div class="social-buttons">
+                        <button class="btn btn-social btn-google">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button class="btn btn-social btn-facebook">
+                            <i class="fab fa-facebook-f"></i> Facebook
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="login-link">
+                    <p>¿Ya tienes una cuenta? <a href="{% url 'accounts:login' %}">Inicia sesión aquí</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    const togglePassword = document.querySelector('.toggle-password');
+    const passwordInput = document.getElementById('id_password1');
+    
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon
+            const icon = this.querySelector('i');
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+    
+    // Mostrar campos adicionales para creadores
+    const userTypeSelect = document.getElementById('id_user_type');
+    if (userTypeSelect) {
+        userTypeSelect.addEventListener('change', function() {
+            // Aquí puedes agregar lógica para mostrar campos adicionales si es creador
+            console.log('Tipo de usuario seleccionado:', this.value);
+        });
+    }
+});
+</script>
+{% endblock %}

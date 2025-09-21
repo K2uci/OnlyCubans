@@ -1,0 +1,156 @@
+{% extends "base.html" %} 
+{% load static %} 
+
+{% block title %}Iniciar Sesión - OnlyCubans{% endblock %} 
+
+{% block body_class %}login-page{% endblock %} 
+
+{% block content %}
+<div class="login-container">
+  <div class="login-wrapper">
+    <div class="login-left">
+      <div class="login-brand">
+        <h1><i class="fas fa-cube"></i> OnlyCubans</h1>
+        <p>Conecta con creadores cubanos y descubre contenido exclusivo</p>
+      </div>
+      <div class="login-features">
+        <div class="feature-item">
+          <i class="fas fa-star"></i>
+          <span>Contenido premium exclusivo</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-users"></i>
+          <span>Comunidad de creadores cubanos</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-lock"></i>
+          <span>Plataforma segura y confiable</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-right">
+      <div class="login-form-container">
+        <h2>Iniciar Sesión</h2>
+        <p class="login-subtitle">Ingresa a tu cuenta para continuar</p>
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-circle"></i>
+          Usuario o contraseña incorrectos. Por favor, intenta nuevamente.
+        </div>
+        {% endif %}
+
+        <form method="post" class="login-form">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label for="id_username">Usuario o Email</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-user"></i></span>
+              <input
+                type="text"
+                name="username"
+                id="id_username"
+                class="form-control"
+                placeholder="Tu usuario o email"
+                required
+                autofocus
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="id_password">Contraseña</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              <input
+                type="password"
+                name="password"
+                id="id_password"
+                class="form-control"
+                placeholder="Tu contraseña"
+                required
+              />
+              <button
+                type="button"
+                class="btn btn-outline-secondary toggle-password"
+              >
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="rememberMe" />
+            <label class="form-check-label" for="rememberMe">Recordarme</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-login">
+            Iniciar Sesión
+          </button>
+
+          <div class="login-links">
+            <a href="{% url 'accounts:password_reset' %}" class="forgot-password"
+              >¿Olvidaste tu contraseña?</a
+            >
+          </div>
+        </form>
+
+        <div class="separator">
+          <span>o</span>
+        </div>
+
+        <div class="social-login">
+          <p>Iniciar sesión con</p>
+          <div class="social-buttons">
+            <button class="btn btn-social btn-google">
+              <i class="fab fa-google"></i> Google
+            </button>
+            <button class="btn btn-social btn-facebook">
+              <i class="fab fa-facebook-f"></i> Facebook
+            </button>
+          </div>
+        </div>
+
+        <div class="signup-link">
+          <p>
+            ¿No tienes una cuenta?
+            <a href="{% url 'accounts:signup' %}">Regístrate ahora</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Toggle password visibility
+    const togglePassword = document.querySelector(".toggle-password");
+    const passwordInput = document.getElementById("id_password");
+
+    if (togglePassword && passwordInput) {
+      togglePassword.addEventListener("click", function () {
+        const type =
+          passwordInput.getAttribute("type") === "password"
+            ? "text"
+            : "password";
+        passwordInput.setAttribute("type", type);
+
+        // Toggle eye icon
+        const icon = this.querySelector("i");
+        if (type === "text") {
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        } else {
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
