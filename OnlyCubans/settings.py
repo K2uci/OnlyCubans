@@ -22,8 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-
-    # 'content',
+    'content',
     # 'subscriptions',
     # 'messaging',
     # 'notifications',
@@ -96,8 +95,21 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'accounts:login'
+
+# Configuración de email para recuperación de contraseña
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # O tu servidor SMTP
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'tu_email@gmail.com'  # Reemplaza con tu email
+EMAIL_HOST_PASSWORD = 'tu_contraseña'   # Reemplaza con tu contraseña
+DEFAULT_FROM_EMAIL = 'OnlyCubans <noreply@onlycubans.com>'
+
+# Si estás en desarrollo, puedes usar console backend para testing
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 LANGUAGE_CODE = 'en-us'
 

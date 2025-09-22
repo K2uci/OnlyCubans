@@ -1,0 +1,180 @@
+{% extends 'content/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - AdultContentHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-section">
+            <h3>Filtros</h3>
+            <div class="filter-options">
+                <div class="filter-group">
+                    <label>Categorías</label>
+                    <select class="form-control">
+                        <option value="">Todas las categorías</option>
+                        <option value="1">Fotos</option>
+                        <option value="2">Videos</option>
+                        <option value="3">En vivo</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Ordenar por</label>
+                    <select class="form-control">
+                        <option value="newest">Más reciente</option>
+                        <option value="popular">Más popular</option>
+                        <option value="trending">Tendencia</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>Creadores Destacados</h3>
+            <div class="featured-creators">
+                {% for creator in featured_creators %}
+                <div class="creator-card">
+                    <div class="creator-avatar">
+                        <img src="{{ creator.profile_picture.url }}" alt="{{ creator.username }}">
+                    </div>
+                    <div class="creator-info">
+                        <h4>{{ creator.username }}</h4>
+                        <p>{{ creator.followers_count }} seguidores</p>
+                        <a href="{% url 'creator_profile' creator.id %}" class="btn btn-small">Ver Perfil</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Feed -->
+    <section class="content-feed">
+        <!-- Create Post Card -->
+        <div class="card create-post-card">
+            <div class="card-header">
+                <div class="user-avatar small">
+                    <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" alt="{{ user.username }}">
+                </div>
+                <input type="text" placeholder="¿Qué quieres compartir hoy?" onclick="location.href='{% url 'create_post' %}'" readonly>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="action-btn">
+                    <i class="icon-image"></i> Foto/Video
+                </button>
+                <button type="button" class="action-btn">
+                    <i class="icon-live"></i> Transmisión en Vivo
+                </button>
+            </div>
+        </div>
+
+        <!-- Posts Feed -->
+        <div class="posts-container">
+            {% for post in posts %}
+            <div class="card post-card" data-post-id="{{ post.id }}">
+                <div class="card-header">
+                    <div class="post-author">
+                        <div class="user-avatar">
+                            <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}">
+                        </div>
+                        <div class="user-info">
+                            <h4>{{ post.author.username }}</h4>
+                            <span class="post-time">{{ post.created_at|timesince }}</span>
+                        </div>
+                    </div>
+                    <div class="post-actions">
+                        <button type="button" class="icon-btn"><i class="icon-more"></i></button>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {% if post.description %}
+                    <p class="post-description">{{ post.description }}</p>
+                    {% endif %}
+
+                    {% if post.media_files.exists %}
+                    <div class="post-media">
+                        {% for media in post.media_files.all %}
+                            {% if media.media_type == 'image' %}
+                            <img src="{{ media.file.url }}" alt="Post image" class="post-image">
+                            {% elif media.media_type == 'video' %}
+                            <video controls class="post-video">
+                                <source src="{{ media.file.url }}" type="video/mp4">
+                                Tu navegador no soporta el elemento de video.
+                            </video>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="post-stats">
+                        <span class="likes-count">{{ post.likes_count }} me gusta</span>
+                        <span class="comments-count">{{ post.comments_count }} comentarios</span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button type="button" class="action-btn like-btn" data-post-id="{{ post.id }}">
+                        <i class="icon-like"></i> Me gusta
+                    </button>
+                    <button type="button" class="action-btn comment-btn">
+                        <i class="icon-comment"></i> Comentar
+                    </button>
+                    <button type="button" class="action-btn share-btn">
+                        <i class="icon-share"></i> Compartir
+                    </button>
+                </div>
+
+                <!-- Comments Section (initially hidden) -->
+                <div class="comments-section" style="display: none;">
+                    <div class="comments-list">
+                        {% for comment in post.comments.all|slice:":3" %}
+                        <div class="comment">
+                            <div class="user-avatar small">
+                                <img src="{{ comment.author.profile_picture.url }}" alt="{{ comment.author.username }}">
+                            </div>
+                            <div class="comment-content">
+                                <strong>{{ comment.author.username }}</strong>
+                                <p>{{ comment.content }}</p>
+                                <span class="comment-time">{{ comment.created_at|timesince }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="add-comment">
+                        <div class="user-avatar small">
+                            <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" alt="{{ user.username }}">
+                        </div>
+                        <input type="text" placeholder="Escribe un comentario...">
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-feed">
+                <h3>No hay publicaciones aún</h3>
+                <p>Sé el primero en compartir contenido o sigue a más creadores para ver sus publicaciones.</p>
+                <a href="{% url 'explore' %}" class="btn btn-primary">Explorar Creadores</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Load More Button -->
+        {% if posts.has_next %}
+        <div class="load-more-container">
+            <button type="button" class="btn btn-secondary load-more-btn" data-page="2">Cargar más publicaciones</button>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

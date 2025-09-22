@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil - AdultContentHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/user_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="cover-photo">
+            <img src="{% if user.cover_photo %}{{ user.cover_photo.url }}{% else %}{% static 'images/default-cover.jpg' %}{% endif %}" alt="Cover photo">
+            <button class="edit-cover-btn"><i class="icon-edit"></i> Editar portada</button>
+        </div>
+        
+        <div class="profile-info">
+            <div class="profile-avatar">
+                <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" alt="{{ user.username }}">
+                <button class="edit-avatar-btn"><i class="icon-camera"></i></button>
+            </div>
+            
+            <div class="profile-details">
+                <h1>{{ user.username }}</h1>
+                <p class="profile-bio">{% if user.bio %}{{ user.bio }}{% else %}No hay biografía aún.{% endif %}</p>
+                
+                <div class="profile-stats">
+                    <div class="stat">
+                        <strong>{{ posts_count }}</strong>
+                        <span>Publicaciones</span>
+                    </div>
+                    <div class="stat">
+                        <strong>{{ user.followers_count }}</strong>
+                        <span>Seguidores</span>
+                    </div>
+                    <div class="stat">
+                        <strong>{{ user.following_count }}</strong>
+                        <span>Siguiendo</span>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button class="btn btn-primary">Editar Perfil</button>
+                    <button class="btn btn-secondary">Configuración</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Navigation -->
+    <nav class="profile-nav">
+        <ul>
+            <li class="{% if active_tab == 'posts' %}active{% endif %}">
+                <a href="{% url 'user_profile' %}">Publicaciones</a>
+            </li>
+            <li class="{% if active_tab == 'media' %}active{% endif %}">
+                <a href="{% url 'user_media' %}">Multimedia</a>
+            </li>
+            <li class="{% if active_tab == 'about' %}active{% endif %}">
+                <a href="{% url 'user_about' %}">Información</a>
+            </li>
+            <li class="{% if active_tab == 'subscribers' %}active{% endif %}">
+                <a href="{% url 'user_subscribers' %}">Suscriptores</a>
+            </li>
+            <li class="{% if active_tab == 'earnings' %}active{% endif %}">
+                <a href="{% url 'user_earnings' %}">Ganancias</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Profile Content -->
+    <div class="profile-content">
+        {% if active_tab == 'posts' %}
+        <div class="profile-posts">
+            <div class="section-header">
+                <h2>Mis Publicaciones</h2>
+                <a href="{% url 'create_post' %}" class="btn btn-primary">Nueva Publicación</a>
+            </div>
+            
+            <div class="posts-grid">
+                {% for post in user_posts %}
+                <div class="post-item">
+                    <div class="post-thumbnail">
+                        {% with post.media_files.all|first as media %}
+                            {% if media.media_type == 'image' %}
+                            <img src="{{ media.file.url }}" alt="Post thumbnail">
+                            {% elif media.media_type == 'video' %}
+                            <video>
+                                <source src="{{ media.file.url }}" type="video/mp4">
+                            </video>
+                            <div class="video-overlay">
+                                <i class="icon-play"></i>
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <div class="post-actions-overlay">
+                            <button class="icon-btn"><i class="icon-eye"></i> {{ post.views_count }}</button>
+                            <button class="icon-btn"><i class="icon-like"></i> {{ post.likes_count }}</button>
+                            <button class="icon-btn"><i class="icon-comment"></i> {{ post.comments_count }}</button>
+                        </div>
+                    </div>
+                    
+                    <div class="post-info">
+                        <h3>{{ post.title|truncatewords:5 }}</h3>
+                        <span class="post-date">{{ post.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="icon-camera"></i>
+                    <h3>No hay publicaciones aún</h3>
+                    <p>Comparte tu primer contenido con tus suscriptores</p>
+                    <a href="{% url 'create_post' %}" class="btn btn-primary">Crear Publicación</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% elif active_tab == 'about' %}
+        <div class="profile-about">
+            <div class="about-section">
+                <h3>Información Personal</h3>
+                <div class="about-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Nombre de usuario:</span>
+                        <span class="detail-value">{{ user.username }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Correo electrónico:</span>
+                        <span class="detail-value">{{ user.email }}</span>
+                    </div>
+                    {% if user.show_gender %}
+                    <div class="detail-item">
+                        <span class="detail-label">Género:</span>
+                        <span class="detail-value">{{ user.get_gender_display }}</span>
+                    </div>
+                    {% endif %}
+                    {% if user.show_birthdate and user.birth_date %}
+                    <div class="detail-item">
+                        <span class="detail-label">Edad:</span>
+                        <span class="detail-value">{{ user.age }} años</span>
+                    </div>
+                    {% endif %}
+                    {% if user.website %}
+                    <div class="detail-item">
+                        <span class="detail-label">Sitio web:</span>
+                        <span class="detail-value"><a href="{{ user.website }}" target="_blank">{{ user.website }}</a></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if user.is_creator and user.creator_profile %}
+            <div class="about-section">
+                <h3>Información del Creador</h3>
+                <div class="about-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Nombre artístico:</span>
+                        <span class="detail-value">{{ user.creator_profile.stage_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Categoría:</span>
+                        <span class="detail-value">{{ user.creator_profile.category }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Suscriptores:</span>
+                        <span class="detail-value">{{ user.creator_profile.total_subscribers }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Contenido publicado:</span>
+                        <span class="detail-value">{{ user.creator_profile.content_count }} items</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="about-section">
+                <h3>Descripción</h3>
+                <p class="creator-description">
+                    {{ user.creator_profile.about }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% elif active_tab == 'earnings' %}
+        <div class="profile-earnings">
+            <div class="earnings-overview">
+                <div class="earnings-card">
+                    <h3>Ganancias Totales</h3>
+                    <div class="earnings-amount">${{ total_earnings|floatformat:2 }}</div>
+                    <span>Desde que empezaste</span>
+                </div>
+                
+                <div class="earnings-card">
+                    <h3>Ganancias del Mes</h3>
+                    <div class="earnings-amount">${{ monthly_earnings|floatformat:2 }}</div>
+                    <span>Este mes</span>
+                </div>
+                
+                <div class="earnings-card">
+                    <h3>Suscriptores</h3>
+                    <div class="earnings-amount">{{ subscribers_count }}</div>
+                    <span>Suscriptores activos</span>
+                </div>
+            </div>
+            
+            <div class="earnings-chart">
+                <h3>Historial de Ganancias</h3>
+                <div class="chart-container">
+                    <!-- Aquí iría un gráfico de ganancias -->
+                    <canvas id="earningsChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="payouts-section">
+                <h3>Solicitudes de Pago</h3>
+                <div class="payouts-list">
+                    {% for payout in payouts %}
+                    <div class="payout-item">
+                        <div class="payout-info">
+                            <strong>${{ payout.amount }}</strong>
+                            <span>{{ payout.status_display }}</span>
+                        </div>
+                        <div class="payout-date">{{ payout.request_date|date:"M d, Y" }}</div>
+                    </div>
+                    {% empty %}
+                    <p>No hay solicitudes de pago recientes.</p>
+                    {% endfor %}
+                </div>
+                
+                <div class="payout-request">
+                    <h4>Solicitar Pago</h4>
+                    <p>Saldo disponible: ${{ available_balance|floatformat:2 }}</p>
+                    {% if available_balance >= minimum_payout %}
+                    <button class="btn btn-primary">Solicitar Pago</button>
+                    {% else %}
+                    <p class="text-muted">Necesitas al menos ${{ minimum_payout|floatformat:2 }} para solicitar un pago.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/user_profile.js' %}"></script>
+{% if active_tab == 'earnings' %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Código para inicializar el gráfico de ganancias
+    const ctx = document.getElementById('earningsChart').getContext('2d');
+    const earningsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ earnings_labels|safe }},
+            datasets: [{
+                label: 'Ganancias Mensuales',
+                data: {{ earnings_data|safe }},
+                borderColor: '#8e44ad',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

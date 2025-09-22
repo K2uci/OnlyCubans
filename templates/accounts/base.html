@@ -25,9 +25,10 @@
       rel="stylesheet"
     />
 
-    <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="/static/css/style.css" />
-
+    <!-- Estilos base -->
+    <link rel="stylesheet" href="/static/css/base.css" />
+    
+    <!-- Estilos específicos por página -->
     {% block extra_css %}{% endblock %}
   </head>
   <body class="{% block body_class %}{% endblock %}">
@@ -37,7 +38,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Scripts personalizados -->
-    <script src="/static/js/main.js"></script>
+    <!-- <script src="/static/js/main.js"></script> -->
 
     {% block extra_js %}{% endblock %}
   </body>
