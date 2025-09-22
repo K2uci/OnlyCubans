@@ -1,0 +1,278 @@
+/* base.css - Estilos base para OnlyCubans */
+
+:root {
+  --primary-color: #e91e63;
+  --primary-dark: #c2185b;
+  --primary-light: #f8bbd9;
+  --secondary-color: #9c27b0;
+  --dark-color: #1a1a1a;
+  --darker-color: #121212;
+  --light-color: #f5f5f5;
+  --gray-color: #2d2d2d;
+  --text-light: #ffffff;
+  --text-dark: #333333;
+  --text-gray: #b0b0b0;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --danger-color: #f44336;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  background: linear-gradient(
+    135deg,
+    var(--darker-color) 0%,
+    var(--dark-color) 100%
+  );
+  color: var(--text-light);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Utilidades */
+.text-primary {
+  color: var(--primary-color) !important;
+}
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+.bg-dark {
+  background-color: var(--dark-color) !important;
+}
+
+.btn-primary {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--secondary-color) 100%
+  );
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 12px 30px;
+  font-weight: 500;
+  transition: var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+  background: linear-gradient(
+    135deg,
+    var(--primary-dark) 0%,
+    var(--secondary-color) 100%
+  );
+}
+
+.btn-social {
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: var(--transition);
+  border: 1px solid var(--gray-color);
+  background: var(--dark-color);
+  color: var(--text-light);
+}
+
+.btn-social:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary-color);
+}
+
+.btn-google:hover {
+  background: #db4437;
+  border-color: #db4437;
+}
+
+.btn-facebook:hover {
+  background: #4267b2;
+  border-color: #4267b2;
+}
+
+/* Formularios */
+.form-control {
+  background-color: var(--gray-color);
+  border: 1px solid #444;
+  border-radius: var(--border-radius);
+  color: var(--text-light);
+  padding: 12px 15px;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  background-color: var(--gray-color);
+  border-color: var(--primary-color);
+  color: var(--text-light);
+  box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+}
+
+.form-control::placeholder {
+  color: var(--text-gray);
+}
+
+.input-group-text {
+  background-color: var(--dark-color);
+  border: 1px solid #444;
+  border-right: none;
+  color: var(--text-gray);
+}
+
+.form-label {
+  color: var(--text-light);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.form-check-label {
+  color: var(--text-light);
+}
+
+/* Alertas */
+.alert {
+  border-radius: var(--border-radius);
+  border: none;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.alert-danger {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #ff6b6b;
+  border-left: 4px solid var(--danger-color);
+}
+
+/* Cards */
+.card {
+  background-color: var(--gray-color);
+  border: 1px solid #444;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container-fluid {
+    padding: 0 15px;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+/* Clases adicionales para páginas de contraseña */
+.password-strength {
+  margin-top: 5px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gray-color);
+  overflow: hidden;
+}
+
+.password-strength-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+.password-strength-weak {
+  background: var(--danger-color);
+  width: 25%;
+}
+
+.password-strength-fair {
+  background: var(--warning-color);
+  width: 50%;
+}
+
+.password-strength-good {
+  background: #ffc107;
+  width: 75%;
+}
+
+.password-strength-strong {
+  background: var(--success-color);
+  width: 100%;
+}
+
+.password-requirements {
+  font-size: 0.85rem;
+  color: var(--text-gray);
+  margin-top: 5px;
+}
+
+.password-requirements ul {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+
+.password-requirements li {
+  margin-bottom: 2px;
+}
+
+.password-requirements .valid {
+  color: var(--success-color);
+}
+
+.password-requirements .invalid {
+  color: var(--text-gray);
+}
+
+/* Mejoras para formularios de contraseña */
+.toggle-password {
+  border-left: none !important;
+  background: var(--dark-color) !important;
+  border-color: #444 !important;
+  color: var(--text-gray) !important;
+}
+
+.toggle-password:hover {
+  background: var(--gray-color) !important;
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}
