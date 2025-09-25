@@ -1,0 +1,128 @@
+<div class="post-card fade-in" data-post-id="{{ post.id }}">
+    <!-- Header del post -->
+    <div class="post-header">
+        <div class="post-user">
+            <img src="{% if post.author.profile_picture %}{{ post.author.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                 alt="{{ post.author.username }}" 
+                 class="user-avatar">
+            <div class="user-info">
+                <h4>{{ post.author.username }}</h4>
+                <span>{{ post.published_at|timesince }} ago</span>
+            </div>
+            {% if post.post_type == 'premium' %}
+            <span class="badge badge-premium">PREMIUM</span>
+            {% elif post.post_type == 'public' %}
+            <span class="badge badge-public">PÚBLICO</span>
+            {% endif %}
+        </div>
+        
+        <div class="post-actions">
+            {% if user == post.author or user.is_staff %}
+            <a href="{% url 'content:post_edit' post.id %}" class="action-btn" title="Editar">
+                <i class="fas fa-edit"></i>
+            </a>
+            <a href="{% url 'content:post_delete' post.id %}" class="action-btn text-danger" title="Eliminar">
+                <i class="fas fa-trash"></i>
+            </a>
+            {% endif %}
+            <button class="action-btn dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div class="dropdown-menu">
+                <a href="#" class="dropdown-item"><i class="fas fa-bookmark"></i> Guardar</a>
+                <a href="#" class="dropdown-item"><i class="fas fa-share"></i> Compartir</a>
+                <a href="{% url 'content:report_content' %}?post_id={{ post.id }}" class="dropdown-item text-danger">
+                    <i class="fas fa-flag"></i> Reportar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido del post -->
+    <div class="post-content">
+        {% if post.title %}
+        <h3 class="post-title">{{ post.title }}</h3>
+        {% endif %}
+        
+        {% if post.description %}
+        <div class="post-description">
+            {{ post.description|linebreaksbr }}
+        </div>
+        {% endif %}
+
+        <!-- Media del post -->
+        {% if post.media_files.exists %}
+        <div class="post-media">
+            <div class="media-grid {% if post.media_files.count == 1 %}single{% elif post.media_files.count == 2 %}double{% else %}multiple{% endif %}">
+                {% for media in post.media_files.all %}
+                <div class="media-item">
+                    {% if media.media_type == 'image' %}
+                    <img src="{{ media.file.url }}" 
+                         alt="{{ media.file_name }}"
+                         loading="lazy"
+                         onclick="openMediaModal('{{ media.file.url }}', 'image')">
+                    {% elif media.media_type == 'video' %}
+                    <video controls poster="{% if media.thumbnail %}{{ media.thumbnail.url }}{% endif %}">
+                        <source src="{{ media.file.url }}" type="video/mp4">
+                        Tu navegador no soporta el elemento video.
+                    </video>
+                    {% else %}
+                    <div class="media-placeholder">
+                        <i class="fas fa-file-{{ media.media_type }} fa-3x"></i>
+                        <span>{{ media.file_name }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if media.is_preview %}
+                    <div class="media-preview-badge">Vista Previa</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Estadísticas -->
+        <div class="post-stats">
+            <span>{{ post.views_count }} vistas</span>
+            <span>{{ post.likes_count }} me gusta</span>
+            <span>{{ post.comments_count }} comentarios</span>
+        </div>
+    </div>
+
+    <!-- Interacciones -->
+    <div class="post-interactions">
+        <button class="interaction-btn like-btn {% if user in post.likes.all %}active{% endif %}" 
+                data-post-id="{{ post.id }}"
+                data-like-url="{% url 'content:like_post' post.id %}"
+                data-unlike-url="{% url 'content:unlike_post' post.id %}">
+            <i class="fas fa-heart"></i>
+            <span>Me gusta</span>
+        </button>
+        
+        <button class="interaction-btn comment-btn" onclick="focusCommentInput({{ post.id }})">
+            <i class="fas fa-comment"></i>
+            <span>Comentar</span>
+        </button>
+        
+        <button class="interaction-btn share-btn">
+            <i class="fas fa-share"></i>
+            <span>Compartir</span>
+        </button>
+        
+        <button class="interaction-btn bookmark-btn {% if user in post.bookmarked_by.all %}active{% endif %}" 
+                data-post-id="{{ post.id }}"
+                data-bookmark-url="{% url 'content:bookmark_post' post.id %}">
+            <i class="fas fa-bookmark"></i>
+            <span>Guardar</span>
+        </button>
+    </div>
+
+    <!-- Sección de comentarios (se carga via AJAX) -->
+    <div class="post-comments" id="comments-{{ post.id }}" style="display: none;">
+        <div class="comments-loading">
+            <div class="loading-spinner"></div>
+            Cargando comentarios...
+        </div>
+    </div>
+</div>

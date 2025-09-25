@@ -1,0 +1,93 @@
+{% load static %}
+
+<header class="content-header">
+    <div class="header-content">
+        <!-- Logo y menú móvil -->
+        <div class="logo-section">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="{% url 'content:dashboard' %}" class="logo">
+                <i class="fas fa-cube"></i>
+                <span>OnlyCubans</span>
+            </a>
+        </div>
+
+        <!-- Búsqueda -->
+        <div class="search-section">
+            <form class="search-form" method="get" action="{% url 'content:post_list' %}">
+                <input type="text" 
+                       class="search-input" 
+                       name="q" 
+                       placeholder="Buscar contenido, creadores..." 
+                       value="{{ request.GET.q }}">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Navegación de usuario -->
+        <div class="user-section">
+            <!-- Notificaciones -->
+            <div class="notification-dropdown">
+                <button class="nav-btn" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="dropdown-menu notification-menu">
+                    <div class="notification-header">
+                        <h4>Notificaciones</h4>
+                        <a href="#" class="mark-all-read">Marcar todas como leídas</a>
+                    </div>
+                    <div class="notification-list">
+                        <!-- Las notificaciones se cargarán aquí -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensajes -->
+            <div class="message-dropdown">
+                <button class="nav-btn" id="messageBtn">
+                    <i class="fas fa-envelope"></i>
+                    <span class="message-badge">5</span>
+                </button>
+            </div>
+
+            <!-- Perfil de usuario -->
+            <div class="profile-dropdown">
+                <button class="profile-btn" id="profileBtn">
+                    <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                         alt="{{ user.username }}" 
+                         class="user-avatar-sm">
+                    <span class="username">{{ user.username }}</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu profile-menu">
+                    {% comment %}
+                    <a href="{% url 'accounts:profile' %}" class="dropdown-item">
+                        <i class="fas fa-user"></i> Mi Perfil
+                    </a>
+                    {% endcomment %}
+                    <a href="{% url 'content:dashboard' %}" class="dropdown-item">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    {% if user.is_creator %}
+                    <a href="{% url 'content:post_create' %}" class="dropdown-item">
+                        <i class="fas fa-plus"></i> Crear Contenido
+                    </a>
+                    {% endif %}
+                    <div class="dropdown-divider"></div>
+                    {% comment %}
+                    <a href="{% url 'accounts:settings' %}" class="dropdown-item">
+                        <i class="fas fa-cog"></i> Configuración
+                    </a>
+                    {% endcomment %}
+                    <a href="{% url 'accounts:logout' %}" class="dropdown-item">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

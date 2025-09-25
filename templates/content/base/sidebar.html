@@ -1,0 +1,111 @@
+<aside class="content-sidebar" id="contentSidebar">
+    <nav class="sidebar-nav">
+        <!-- Navegación principal -->
+        <a href="{% url 'content:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+        </a>
+        
+        <a href="{% url 'content:home_feed' %}" class="nav-item {% if request.resolver_match.url_name == 'home_feed' %}active{% endif %}">
+            <i class="fas fa-newspaper"></i>
+            <span>Mi Feed</span>
+        </a>
+        
+        <a href="{% url 'content:discover_feed' %}" class="nav-item {% if request.resolver_match.url_name == 'discover_feed' %}active{% endif %}">
+            <i class="fas fa-compass"></i>
+            <span>Descubrir</span>
+        </a>
+
+        <!-- Para creadores -->
+        {% if user.is_creator %}
+        <div class="nav-section">
+            <div class="nav-section-title">Mi Contenido</div>
+            <a href="{% url 'content:post_create' %}" class="nav-item">
+                <i class="fas fa-plus-circle"></i>
+                <span>Crear Post</span>
+            </a>
+            <a href="{% url 'content:post_draft_list' %}" class="nav-item">
+                <i class="fas fa-edit"></i>
+                <span>Borradores</span>
+                {% comment %}
+                <span class="nav-badge">{{ user.posts.filter(status='draft').count }}</span>
+                {% endcomment %}
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Analíticas</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Navegación general -->
+        <div class="nav-section">
+            <div class="nav-section-title">Explorar</div>
+            <a href="{% url 'content:post_list' %}" class="nav-item {% if request.resolver_match.url_name == 'post_list' %}active{% endif %}">
+                <i class="fas fa-fire"></i>
+                <span>Trending</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Creadores</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-tags"></i>
+                <span>Categorías</span>
+            </a>
+        </div>
+
+        <!-- Moderación (solo para staff) -->
+        {% if user.is_staff or user.is_superuser %}
+        <div class="nav-section">
+            <div class="nav-section-title">Moderación</div>
+            <a href="{% url 'content:moderation_dashboard' %}" class="nav-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>Panel Moderación</span>
+                <span class="nav-badge">12</span>
+            </a>
+            <a href="{% url 'content:report_list' %}" class="nav-item">
+                <i class="fas fa-flag"></i>
+                <span>Reportes</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Enlaces de soporte -->
+        <div class="nav-section">
+            <div class="nav-section-title">Soporte</div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>Ayuda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-comments"></i>
+                <span>Comunidad</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-info-circle"></i>
+                <span>Acerca de</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Información del usuario -->
+    <div class="sidebar-footer">
+        <div class="user-stats">
+            <div class="stat-item">
+                <span class="stat-number">{{ user.followers_count }}</span>
+                <span class="stat-label">Seguidores</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ user.following_count }}</span>
+                <span class="stat-label">Siguiendo</span>
+            </div>
+            {% if user.is_creator %}
+            <div class="stat-item">
+                <span class="stat-number">{{ user.creator_profile.total_subscribers }}</span>
+                <span class="stat-label">Suscriptores</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</aside>

@@ -1,0 +1,191 @@
+{% extends "content/base/base.html" %}
+{% load static %}
+
+{% block title %}Mi Feed - OnlyCubans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/content/feeds.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="feeds-container">
+    <!-- Header del Feed -->
+    <div class="feed-header">
+        <div class="feed-nav">
+            <a href="{% url 'content:home_feed' %}" class="feed-nav-item active">
+                <i class="fas fa-home"></i> Mi Feed
+            </a>
+            <a href="{% url 'content:discover_feed' %}" class="feed-nav-item">
+                <i class="fas fa-compass"></i> Descubrir
+            </a>
+            <a href="{% url 'content:post_list' %}" class="feed-nav-item">
+                <i class="fas fa-fire"></i> Trending
+            </a>
+        </div>
+
+        <div class="feed-filters">
+            <div class="filter-group">
+                <span class="filter-label">Ordenar por:</span>
+                <select class="filter-select" onchange="updateFeedSort(this.value)">
+                    <option value="recent">Más reciente</option>
+                    <option value="popular">Más popular</option>
+                    <option value="trending">Trending</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <span class="filter-label">Tipo:</span>
+                <select class="filter-select" onchange="updateFeedType(this.value)">
+                    <option value="all">Todo el contenido</option>
+                    <option value="public">Solo público</option>
+                    <option value="premium">Solo premium</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="feed-grid">
+        <!-- Contenido Principal -->
+        <div class="feed-main">
+            {% if page_obj %}
+                {% for post in page_obj %}
+                    {% include "content/base/post_card.html" with post=post %}
+                {% endfor %}
+
+                <!-- Paginación -->
+                {% include "content/base/pagination.html" with page_obj=page_obj %}
+            {% else %}
+                <!-- Estado vacío -->
+                <div class="feed-empty-state">
+                    <i class="fas fa-newspaper"></i>
+                    <h3>Tu feed está vacío</h3>
+                    <p>Comienza siguiendo a algunos creadores para ver su contenido aquí, o explora contenido nuevo en la sección de Descubrir.</p>
+                    <div class="empty-state-actions">
+                        <a href="{% url 'content:discover_feed' %}" class="btn btn-primary">
+                            <i class="fas fa-compass"></i> Explorar Contenido
+                        </a>
+                        <a href="#" class="btn btn-social">
+                            <i class="fas fa-users"></i> Descubrir Creadores
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="feed-sidebar">
+            <!-- Creadores Sugeridos -->
+            <div class="sidebar-widget">
+                <div class="widget-header">
+                    <h3><i class="fas fa-user-plus"></i> Creadores Sugeridos</h3>
+                </div>
+                <div class="widget-content">
+                    <div class="suggested-creators">
+                        <!-- Estos se cargarían dinámicamente -->
+                        <div class="creator-item">
+                            <img src="{% static 'images/default-avatar.png' %}" 
+                                 alt="Creador" 
+                                 class="creator-avatar-sm">
+                            <div class="creator-details">
+                                <div class="creator-name">Ana_Cubana</div>
+                                <div class="creator-category">Música</div>
+                            </div>
+                            <button class="follow-btn">Seguir</button>
+                        </div>
+                        <div class="creator-item">
+                            <img src="{% static 'images/default-avatar.png' %}" 
+                                 alt="Creador" 
+                                 class="creator-avatar-sm">
+                            <div class="creator-details">
+                                <div class="creator-name">Carlos_Art</div>
+                                <div class="creator-category">Arte</div>
+                            </div>
+                            <button class="follow-btn">Seguir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trending -->
+            <div class="sidebar-widget">
+                <div class="widget-header">
+                    <h3><i class="fas fa-fire"></i> Trending Hoy</h3>
+                </div>
+                <div class="widget-content">
+                    <div class="trending-list">
+                        <div class="trending-item">
+                            <span class="trending-rank">1</span>
+                            <div class="trending-content">
+                                <div class="trending-title">Nueva canción cubana</div>
+                                <div class="trending-metrics">1.2K vistas</div>
+                            </div>
+                        </div>
+                        <div class="trending-item">
+                            <span class="trending-rank">2</span>
+                            <div class="trending-content">
+                                <div class="trending-title">Recetas tradicionales</div>
+                                <div class="trending-metrics">980 vistas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categorías Populares -->
+            <div class="sidebar-widget">
+                <div class="widget-header">
+                    <h3><i class="fas fa-tags"></i> Categorías</h3>
+                </div>
+                <div class="widget-content">
+                    <div class="categories-grid">
+                        <a href="#" class="category-item">
+                            <i class="fas fa-music category-icon"></i>
+                            <div class="category-name">Música</div>
+                        </a>
+                        <a href="#" class="category-item">
+                            <i class="fas fa-utensils category-icon"></i>
+                            <div class="category-name">Cocina</div>
+                        </a>
+                        <a href="#" class="category-item">
+                            <i class="fas fa-paint-brush category-icon"></i>
+                            <div class="category-name">Arte</div>
+                        </a>
+                        <a href="#" class="category-item">
+                            <i class="fas fa-dumbbell category-icon"></i>
+                            <div class="category-name">Deportes</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateFeedSort(sortType) {
+    // Lógica para actualizar el orden del feed
+    console.log('Ordenar por:', sortType);
+    // Aquí iría la lógica AJAX para actualizar el feed
+}
+
+function updateFeedType(contentType) {
+    // Lógica para filtrar por tipo de contenido
+    console.log('Filtrar por:', contentType);
+    // Aquí iría la lógica AJAX para filtrar el feed
+}
+
+// Cargar más contenido al hacer scroll
+window.addEventListener('scroll', function() {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+        // Cargar más contenido
+        loadMoreContent();
+    }
+});
+
+function loadMoreContent() {
+    // Lógica para cargar más contenido via AJAX
+}
+</script>
+{% endblock %}

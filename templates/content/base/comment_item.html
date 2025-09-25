@@ -1,0 +1,77 @@
+<div class="comment-item" data-comment-id="{{ comment.id }}">
+    <div class="comment-header">
+        <div class="comment-user">
+            <img src="{% if comment.author.profile_picture %}{{ comment.author.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                 alt="{{ comment.author.username }}" 
+                 class="comment-avatar">
+            <div>
+                <strong>{{ comment.author.username }}</strong>
+                <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+            </div>
+        </div>
+        
+        {% if user == comment.author or user == comment.post.author or user.is_staff %}
+        <div class="comment-actions-dropdown">
+            <button class="action-btn dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div class="dropdown-menu">
+                {% if user == comment.author %}
+                <button class="dropdown-item edit-comment-btn" data-comment-id="{{ comment.id }}">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                {% endif %}
+                <button class="dropdown-item delete-comment-btn text-danger" 
+                        data-comment-id="{{ comment.id }}"
+                        data-delete-url="{% url 'content:delete_comment' comment.id %}">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="comment-content">
+        {{ comment.content|linebreaksbr }}
+    </div>
+
+    <div class="comment-actions">
+        <button class="comment-action like-comment-btn {% if user in comment.likes.all %}active{% endif %}" 
+                data-comment-id="{{ comment.id }}"
+                data-like-url="{% url 'content:like_comment' comment.id %}">
+            <i class="fas fa-heart"></i> {{ comment.likes_count }}
+        </button>
+        
+        <button class="comment-action reply-comment-btn" 
+                data-comment-id="{{ comment.id }}">
+            <i class="fas fa-reply"></i> Responder
+        </button>
+    </div>
+
+    <!-- Respuestas -->
+    {% if comment.replies.exists %}
+    <div class="comment-replies">
+        {% for reply in comment.replies.all %}
+            {% include 'content/base/comment_item.html' with comment=reply %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Formulario de respuesta (oculto por defecto) -->
+    <div class="reply-form-container" id="reply-form-{{ comment.id }}" style="display: none;">
+        <form class="reply-form" method="post" data-comment-id="{{ comment.id }}">
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea name="content" 
+                          class="form-control" 
+                          placeholder="Escribe tu respuesta..." 
+                          rows="2"
+                          required></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary cancel-reply-btn">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Responder</button>
+            </div>
+        </form>
+    </div>
+</div>

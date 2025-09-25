@@ -39,3 +39,43 @@ Detalle de cada aplicación:
    Modelos: ViewerStats, EarningsReport
 
    Funcionalidades: métricas para creadores
+
+templates/
+└── content/
+├── base/ # Plantillas base y componentes reutilizables
+│ ├── base.html # Base principal
+│ ├── header.html # Header específico de content
+│ ├── sidebar.html # Sidebar de navegación
+│ ├── post_card.html # Componente de tarjeta de post
+│ ├── comment_item.html # Componente de comentario
+│ ├── media_gallery.html # Galería de medios
+│ └── pagination.html # Componente de paginación
+│
+├── feeds/ # Plantillas de feeds
+│ ├── feed_home.html # Feed principal
+│ ├── feed_discover.html # Feed de descubrimiento
+│ ├── feed_creator.html # Feed de creador
+│ └── feed_category.html # Feed por categoría
+│
+├── posts/ # Gestión de posts
+│ ├── post_list.html # Lista de posts
+│ ├── post_detail.html # Detalle de post
+│ ├── post_form.html # Formulario crear/editar post
+│ ├── post_confirm_delete.html
+│ └── post_draft_list.html
+│
+├── interactions/ # Interacciones
+│ ├── comments.html # Sección de comentarios
+│ ├── likes_modal.html # Modal de likes
+│ └── bookmarks.html # Página de bookmarks
+│
+├── moderation/ # Moderación
+│ ├── moderation_dashboard.html
+│ ├── report_list.html
+│ ├── review_report.html
+│ └── report_modal.html
+│
+└── dashboard/ # Dashboards
+├── dashboard.html # Dashboard principal
+├── creator_dashboard.html
+└── analytics.html

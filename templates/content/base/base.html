@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OnlyCubans - Red Social{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Base -->
+    <link rel="stylesheet" href="{% static 'css/content/base.css' %}">
+    
+    <!-- CSS específico de la página -->
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="OnlyCubans - La red social cubana para creadores de contenido">
+    <meta name="keywords" content="cuba, red social, creadores, contenido, onlycubans">
+</head>
+<body class="content-base">
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="content-container">
+        <!-- Header -->
+        {% include 'content/base/header.html' %}
+        
+        <!-- Sidebar -->
+        {% include 'content/base/sidebar.html' %}
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Mensajes -->
+            {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} fade-in">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Contenido principal -->
+            {% block content %}
+            {% endblock %}
+        </main>
+        
+        <!-- Footer -->
+        <footer class="content-footer">
+            <div class="footer-content">
+                <p>&copy; 2024 OnlyCubans. Todos los derechos reservados.</p>
+                <div class="footer-links">
+                    <a href="#">Términos de servicio</a>
+                    <a href="#">Privacidad</a>
+                    <a href="#">Contacto</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript Base -->
+    <script src="{% static 'js/content/base.js' %}"></script>
+    
+    <!-- JavaScript específico de la página -->
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Scripts de terceros -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+</body>
+</html>
