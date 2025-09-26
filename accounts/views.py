@@ -8,8 +8,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.views import LoginView as BaseLoginView
-from .forms import CustomUserCreationForm  # Importa el formulario personalizado
-from .models import User, CreatorProfile  # Importa los modelos
+from .forms import CustomUserCreationForm
+from .models import User, CreatorProfile
 
 @method_decorator(csrf_protect, name='dispatch')
 class CustomLoginView(BaseLoginView):
@@ -17,42 +17,34 @@ class CustomLoginView(BaseLoginView):
     redirect_authenticated_user = True
     
     def form_valid(self, form):
-        username = form.cleaned_data.get('username')
-        password = form.cleaned_data.get('password')
-        user = authenticate(self.request, username=username, password=password)
+        user = form.get_user()
         
-        if user is not None:
-            if user.is_active and not user.is_banned:
-                login(self.request, user)
-                messages.success(self.request, f'¡Bienvenido de nuevo, {user.username}!')
-                
-                if user.is_creator:
-                    return redirect('creator:dashboard')
-                else:
-                    return redirect('home')
-            else:
-                if user.is_banned:
-                    messages.error(self.request, 'Tu cuenta ha sido suspendida. Contacta al soporte.')
-                else:
-                    messages.error(self.request, 'Tu cuenta está inactiva.')
-                return self.form_invalid(form)
+        if user.is_active and not user.is_banned:
+            login(self.request, user)
+            messages.success(self.request, f'¡Bienvenido de nuevo, {user.username}!')
+            return redirect(self.get_success_url())
         else:
-            messages.error(self.request, 'Usuario o contraseña incorrectos.')
+            if user.is_banned:
+                messages.error(self.request, 'Tu cuenta ha sido suspendida. Contacta al soporte.')
+            else:
+                messages.error(self.request, 'Tu cuenta está inactiva.')
             return self.form_invalid(form)
     
     def get_success_url(self):
+        # Primero verificar si hay un parámetro 'next'
         next_url = self.request.GET.get('next')
         if next_url:
             return next_url
         
-        if self.request.user.is_creator:
+        # Luego redirigir según el tipo de usuario
+        if hasattr(self.request.user, 'is_creator') and self.request.user.is_creator:
             return reverse_lazy('creator:dashboard')
-        return reverse_lazy('home')
+        return reverse_lazy('content')
 
 @csrf_protect
 def signup(request):
     if request.user.is_authenticated:
-        return redirect('home')
+        return redirect('content')
     
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -75,19 +67,28 @@ def signup(request):
                         stage_name=f"{user.first_name} {user.last_name}".strip()
                     )
                 
-                # Iniciar sesión automáticamente
-                login(request, user)
-                
-                messages.success(
+                # Iniciar sesión automáticamente después del registro
+                user = authenticate(
                     request, 
-                    f'¡Cuenta creada exitosamente! Bienvenido a OnlyCubans, {user.username}.'
+                    username=form.cleaned_data['username'],
+                    password=form.cleaned_data['password1']
                 )
                 
-                # Redirigir según el tipo de usuario
-                if user.is_creator:
-                    return redirect('creator:onboarding')  # O la página que prefieras
+                if user is not None:
+                    login(request, user)
+                    messages.success(
+                        request, 
+                        f'¡Cuenta creada exitosamente! Bienvenido a OnlyCubans, {user.username}.'
+                    )
+                    
+                    # Redirigir según el tipo de usuario
+                    if user.user_type == 'creator':
+                        return redirect('creator:onboarding')
+                    else:
+                        return redirect('content')
                 else:
-                    return redirect('home')
+                    messages.error(request, 'Error al autenticar después del registro.')
+                    return redirect('accounts:login')
                     
             except Exception as e:
                 messages.error(
@@ -116,44 +117,39 @@ def profile(request):
 def settings(request):
     return render(request, 'accounts/settings.html', {'user': request.user})
 
-# Vista alternativa de login basada en función
-@csrf_protect
-def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('home')
+# Vista alternativa de login basada en función (ELIMINAR ESTA VISTA SI NO ES NECESARIA)
+# @csrf_protect
+# def login_view(request):
+#     if request.user.is_authenticated:
+#         return redirect('content')
     
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=username, password=password)
+#     if request.method == 'POST':
+#         form = AuthenticationForm(request, data=request.POST)
+#         if form.is_valid():
+#             user = form.get_user()
             
-            if user is not None:
-                if user.is_active and not user.is_banned:
-                    login(request, user)
-                    messages.success(request, f'¡Bienvenido de nuevo, {user.username}!')
-                    
-                    if user.is_creator:
-                        return redirect('creator:dashboard')
-                    else:
-                        next_url = request.GET.get('next')
-                        if next_url:
-                            return redirect(next_url)
-                        return redirect('home')
-                else:
-                    if user.is_banned:
-                        messages.error(request, 'Tu cuenta ha sido suspendida. Contacta al soporte.')
-                    else:
-                        messages.error(request, 'Tu cuenta está inactiva.')
-            else:
-                messages.error(request, 'Usuario o contraseña incorrectos.')
-        else:
-            messages.error(request, 'Por favor, ingresa credenciales válidas.')
-    else:
-        form = AuthenticationForm()
+#             if user.is_active and not user.is_banned:
+#                 login(request, user)
+#                 messages.success(request, f'¡Bienvenido de nuevo, {user.username}!')
+                
+#                 if user.is_creator:
+#                     return redirect('creator:dashboard')
+#                 else:
+#                     next_url = request.GET.get('next')
+#                     if next_url:
+#                         return redirect(next_url)
+#                     return redirect('content')
+#             else:
+#                 if user.is_banned:
+#                     messages.error(request, 'Tu cuenta ha sido suspendida. Contacta al soporte.')
+#                 else:
+#                     messages.error(request, 'Tu cuenta está inactiva.')
+#         else:
+#             messages.error(request, 'Por favor, ingresa credenciales válidas.')
+#     else:
+#         form = AuthenticationForm()
     
-    return render(request, 'accounts/login.html', {
-        'form': form,
-        'title': 'Iniciar Sesión - OnlyCubans'
-    })
+#     return render(request, 'accounts/login.html', {
+#         'form': form,
+#         'title': 'Iniciar Sesión - OnlyCubans'
+#     })

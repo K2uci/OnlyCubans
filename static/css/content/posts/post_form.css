@@ -1,0 +1,427 @@
+/* post_form.css - Estilos específicos para el formulario de posts */
+
+.post-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.post-form-header {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.post-form-title {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--secondary-500) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.post-form-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+}
+
+/* Formulario Principal */
+.post-form {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.form-section {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.section-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.section-title i {
+  color: var(--primary-500);
+}
+
+/* Campos del Formulario */
+.form-group {
+  margin-bottom: var(--space-4);
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.form-control {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+.form-control::placeholder {
+  color: var(--text-tertiary);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Editor Rich Text */
+.rich-text-editor {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.editor-toolbar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding: var(--space-2);
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.toolbar-button {
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.toolbar-button:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.toolbar-button.active {
+  background: var(--primary-500);
+  color: white;
+}
+
+.editor-content {
+  min-height: 200px;
+  padding: var(--space-4);
+  background: var(--bg-surface);
+}
+
+/* Upload de Archivos */
+.file-upload-area {
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  text-align: center;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.file-upload-area:hover {
+  border-color: var(--primary-500);
+  background: rgba(233, 30, 99, 0.05);
+}
+
+.file-upload-area.dragover {
+  border-color: var(--primary-500);
+  background: rgba(233, 30, 99, 0.1);
+}
+
+.upload-icon {
+  font-size: var(--text-4xl);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-3);
+}
+
+.upload-text {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.upload-hint {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.file-input {
+  display: none;
+}
+
+/* Media Preview */
+.media-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.media-preview-item {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.media-preview-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+
+.media-preview-video {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+
+.media-preview-actions {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  display: flex;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.media-preview-item:hover .media-preview-actions {
+  opacity: 1;
+}
+
+.preview-action {
+  background: rgba(0, 0, 0, 0.8);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-size: var(--text-xs);
+}
+
+/* Configuraciones Avanzadas */
+.advanced-settings {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.setting-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.toggle-label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-tertiary);
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background: var(--primary-500);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* Previsualización en Tiempo Real */
+.preview-section {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.preview-container {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  min-height: 200px;
+}
+
+/* Acciones del Formulario */
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-500);
+}
+
+/* Validación */
+.form-error {
+  color: var(--error-500);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+
+.form-control.error {
+  border-color: var(--error-500);
+}
+
+.form-success {
+  color: var(--success-500);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .post-form-container {
+    padding: var(--space-2);
+  }
+
+  .post-form-header {
+    padding: var(--space-4);
+  }
+
+  .post-form {
+    padding: var(--space-4);
+  }
+
+  .form-section {
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-4);
+  }
+
+  .media-preview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .editor-toolbar {
+    justify-content: center;
+  }
+}
+
+/* Animaciones */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-section {
+  animation: slideIn 0.6s var(--transition-normal) backwards;
+}
+
+.form-section:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.form-section:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.form-section:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.form-section:nth-child(4) {
+  animation-delay: 0.4s;
+}

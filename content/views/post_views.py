@@ -172,7 +172,7 @@ class PostDetailView(LoginRequiredMixin, DetailView):
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
-    template_name = 'content/post_form.html'
+    template_name = 'content/posts/post_form.html'
     
     def form_valid(self, form):
         form.instance.author = self.request.user

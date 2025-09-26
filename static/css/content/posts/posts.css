@@ -1,0 +1,217 @@
+/* posts.css - Estilos base para la gestión de posts */
+
+.posts-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+/* Header de Posts */
+.posts-header {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.posts-title {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--secondary-500) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.posts-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.posts-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Filtros y Búsqueda */
+.posts-filters {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.filter-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.filter-select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filter-select:hover {
+  border-color: var(--primary-500);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+/* Grid de Posts */
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-4);
+}
+
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Estados Vacíos */
+.posts-empty {
+  text-align: center;
+  padding: var(--space-8);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+}
+
+.posts-empty-icon {
+  font-size: var(--text-5xl);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.posts-empty-title {
+  font-size: var(--text-xl);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.posts-empty-description {
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .posts-container {
+    padding: var(--space-2);
+  }
+
+  .posts-header {
+    padding: var(--space-4);
+  }
+
+  .posts-title {
+    font-size: var(--text-2xl);
+  }
+
+  .posts-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .posts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Utilidades de Posts */
+.post-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-draft {
+  background: var(--warning-500);
+  color: white;
+}
+
+.status-published {
+  background: var(--success-500);
+  color: white;
+}
+
+.status-scheduled {
+  background: var(--info-500);
+  color: white;
+}
+
+.status-hidden {
+  background: var(--error-500);
+  color: white;
+}
+
+.post-type {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.type-public {
+  background: var(--success-500);
+  color: white;
+}
+
+.type-premium {
+  background: linear-gradient(135deg, #ffd700 0%, #ff6b00 100%);
+  color: black;
+}
+
+.type-private {
+  background: var(--error-500);
+  color: white;
+}

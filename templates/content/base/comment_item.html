@@ -1,21 +1,31 @@
-<div class="comment-item" data-comment-id="{{ comment.id }}">
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/content/base/comment_item.css' %}">
+
+<div class="comment-item comment-level-{% if comment.parent %}2{% else %}1{% endif %} {% if comment.is_flagged %}comment-moderated{% endif %}" 
+     data-comment-id="{{ comment.id }}"
+     {% if comment.is_flagged %}data-moderated="true"{% endif %}>
+
     <div class="comment-header">
         <div class="comment-user">
             <img src="{% if comment.author.profile_picture %}{{ comment.author.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
                  alt="{{ comment.author.username }}" 
                  class="comment-avatar">
-            <div>
-                <strong>{{ comment.author.username }}</strong>
-                <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+            <div class="comment-user-info">
+                <div class="comment-author">{{ comment.author.username }}</div>
+                <div class="comment-time">{{ comment.created_at|timesince }} ago
+                    {% if comment.is_edited %}
+                    <span class="comment-edited">(editado)</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
         
         {% if user == comment.author or user == comment.post.author or user.is_staff %}
         <div class="comment-actions-dropdown">
-            <button class="action-btn dropdown-toggle" data-bs-toggle="dropdown">
+            <button class="comment-action-btn dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="fas fa-ellipsis-h"></i>
             </button>
-            <div class="dropdown-menu">
+            <div class="comment-dropdown-menu">
                 {% if user == comment.author %}
                 <button class="dropdown-item edit-comment-btn" data-comment-id="{{ comment.id }}">
                     <i class="fas fa-edit"></i> Editar
@@ -32,7 +42,11 @@
     </div>
 
     <div class="comment-content">
+        {% if comment.is_flagged %}
+        <em>Este comentario ha sido moderado por incumplir las normas de la comunidad.</em>
+        {% else %}
         {{ comment.content|linebreaksbr }}
+        {% endif %}
     </div>
 
     <div class="comment-actions">
@@ -46,6 +60,14 @@
                 data-comment-id="{{ comment.id }}">
             <i class="fas fa-reply"></i> Responder
         </button>
+        
+        {% if not comment.is_flagged %}
+        <button class="comment-action report-comment-btn" 
+                data-comment-id="{{ comment.id }}"
+                data-report-url="{% url 'content:report_content' %}">
+            <i class="fas fa-flag"></i> Reportar
+        </button>
+        {% endif %}
     </div>
 
     <!-- Respuestas -->
@@ -57,7 +79,7 @@
     </div>
     {% endif %}
 
-    <!-- Formulario de respuesta (oculto por defecto) -->
+    <!-- Formulario de respuesta -->
     <div class="reply-form-container" id="reply-form-{{ comment.id }}" style="display: none;">
         <form class="reply-form" method="post" data-comment-id="{{ comment.id }}">
             {% csrf_token %}
@@ -65,11 +87,11 @@
                 <textarea name="content" 
                           class="form-control" 
                           placeholder="Escribe tu respuesta..." 
-                          rows="2"
+                          rows="3"
                           required></textarea>
             </div>
             <div class="form-actions">
-                <button type="button" class="btn btn-secondary cancel-reply-btn">Cancelar</button>
+                <button type="button" class="cancel-reply-btn">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Responder</button>
             </div>
         </form>

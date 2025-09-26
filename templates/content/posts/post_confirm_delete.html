@@ -1,0 +1,125 @@
+{% extends "content/base/base.html" %}
+{% load static %}
+
+{% block title %}Eliminar Publicación - OnlyCubans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/content/posts/posts.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/posts/post_confirm_delete.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="delete-confirm-container">
+    <div class="delete-confirm-card">
+        <!-- Icono de Advertencia -->
+        <div class="delete-warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <!-- Título -->
+        <h1 class="delete-title">¿Estás seguro de que quieres eliminar esta publicación?</h1>
+        
+        <!-- Mensaje -->
+        <p class="delete-message">
+            Esta acción no se puede deshacer. La publicación será eliminada permanentemente 
+            junto con todos sus comentarios, likes y estadísticas.
+        </p>
+
+        <!-- Vista Previa del Post -->
+        <div class="post-preview">
+            <h3 class="preview-title">{{ post.title }}</h3>
+            <div class="preview-meta">
+                <span><i class="fas fa-calendar"></i> {{ post.created_at|date:"d M Y" }}</span>
+                <span><i class="fas fa-eye"></i> {{ post.views_count }} vistas</span>
+                <span><i class="fas fa-heart"></i> {{ post.likes_count }} likes</span>
+                <span><i class="fas fa-comment"></i> {{ post.comments_count }} comentarios</span>
+            </div>
+            {% if post.description %}
+            <p style="margin-top: var(--space-2); color: var(--text-secondary);">
+                {{ post.description|truncatewords:30 }}
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Consecuencias -->
+        <div class="consequences-list">
+            <h4 class="consequences-title">
+                <i class="fas fa-times-circle"></i> Esta acción eliminará:
+            </h4>
+            <ul>
+                <li>La publicación y todo su contenido multimedia</li>
+                <li>Todos los comentarios y respuestas asociados</li>
+                <li>Todos los likes y reacciones</li>
+                <li>El historial de visualizaciones</li>
+                <li>Las estadísticas de engagement</li>
+                <li>Las menciones en otros posts</li>
+            </ul>
+        </div>
+
+        <!-- Acciones -->
+        <div class="delete-actions">
+            <a href="{% url 'content:post_detail' post.id %}" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancelar y Volver
+            </a>
+            
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger">
+                    <i class="fas fa-trash"></i> Sí, Eliminar Permanentemente
+                </button>
+            </form>
+        </div>
+
+        <!-- Advertencia Adicional -->
+        <div style="margin-top: var(--space-4); padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md);">
+            <p style="color: var(--text-tertiary); font-size: var(--text-sm); margin: 0;">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Nota:</strong> Si solo quieres ocultar la publicación temporalmente, 
+                considera <a href="{% url 'content:post_edit' post.id %}" style="color: var(--primary-500);">editarla</a> 
+                y cambiar su estado a "Oculto" en lugar de eliminarla.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prevenir envío accidental del formulario
+    const deleteForm = document.querySelector('form');
+    let confirmed = false;
+
+    deleteForm.addEventListener('submit', function(e) {
+        if (!confirmed) {
+            e.preventDefault();
+            
+            // Mostrar confirmación adicional
+            if (confirm('¿ESTÁS ABSOLUTAMENTE SEGURO?\n\nEsta es tu última oportunidad para cancelar. La publicación será eliminada PERMANENTEMENTE.')) {
+                confirmed = true;
+                deleteForm.submit();
+            }
+        }
+    });
+
+    // Efecto de shake al pasar el mouse sobre el botón de eliminar
+    const deleteBtn = document.querySelector('.btn-danger');
+    
+    deleteBtn.addEventListener('mouseenter', function() {
+        this.style.animation = 'shake 0.5s ease-in-out';
+    });
+    
+    deleteBtn.addEventListener('mouseleave', function() {
+        this.style.animation = '';
+    });
+
+    // Prevenir navegación accidental
+    window.addEventListener('beforeunload', function(e) {
+        if (!confirmed) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+});
+</script>
+{% endblock %}

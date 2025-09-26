@@ -1,0 +1,308 @@
+{% extends "content/base/base.html" %}
+{% load static %}
+
+{% block title %}Borradores - OnlyCubans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/content/posts/posts.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/posts/post_draft_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="drafts-container">
+    <!-- Header -->
+    <div class="drafts-header">
+        <h1 class="drafts-title">
+            <i class="fas fa-edit"></i> Tus Borradores
+        </h1>
+        <p class="drafts-subtitle">
+            Gestiona y organiza tus publicaciones en progreso
+        </p>
+        
+        <div class="drafts-stats">
+            <div class="draft-stat">
+                <span class="draft-stat-value">{{ drafts.count }}</span>
+                <span class="draft-stat-label">Borradores</span>
+            </div>
+            <div class="draft-stat">
+                <span class="draft-stat-value">{{ total_characters }}</span>
+                <span class="draft-stat-label">Caracteres</span>
+            </div>
+            <div class="draft-stat">
+                <span class="draft-stat-value">{{ oldest_draft_age }}d</span>
+                <span class="draft-stat-label">Más antiguo</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="drafts-filters">
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">Todos los borradores</button>
+            <button class="filter-tab" data-filter="recent">Recientes</button>
+            <button class="filter-tab" data-filter="media">Con multimedia</button>
+            <button class="filter-tab" data-filter="incomplete">Incompletos</button>
+        </div>
+    </div>
+
+    <!-- Lista de Borradores -->
+    <div class="drafts-list">
+        {% for draft in drafts %}
+        <div class="draft-item" onclick="window.location.href='{% url 'content:post_edit' draft.id %}'">
+            <!-- Preview -->
+            <div class="draft-preview">
+                {% if draft.media_files.first %}
+                    {% if draft.media_files.first.media_type == 'image' %}
+                    <img src="{{ draft.media_files.first.file.url }}" alt="{{ draft.title }}">
+                    {% else %}
+                    <i class="fas fa-{% if draft.media_files.first.media_type == 'video' %}video{% else %}file{% endif %}"></i>
+                    {% endif %}
+                {% else %}
+                <i class="fas fa-file-alt"></i>
+                {% endif %}
+            </div>
+
+            <!-- Contenido -->
+            <div class="draft-content">
+                <h3 class="draft-title">{{ draft.title|default:"Sin título" }}</h3>
+                
+                {% if draft.description %}
+                <p class="draft-description">{{ draft.description|truncatewords:20 }}</p>
+                {% else %}
+                <p class="draft-description" style="color: var(--text-tertiary); font-style: italic;">
+                    Sin descripción...
+                </p>
+                {% endif %}
+
+                <div class="draft-meta">
+                    <span><i class="fas fa-calendar"></i> {{ draft.created_at|date:"d M Y" }}</span>
+                    <span><i class="fas fa-edit"></i> {{ draft.updated_at|timesince }} ago</span>
+                    {% if draft.media_files.exists %}
+                    <span><i class="fas fa-image"></i> {{ draft.media_files.count }} archivos</span>
+                    {% endif %}
+                    <span class="draft-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ draft.completion_percentage }}%"></div>
+                        </div>
+                        <span class="progress-text">{{ draft.completion_percentage }}%</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="draft-actions">
+                <a href="{% url 'content:post_edit' draft.id %}" class="draft-action-btn edit" onclick="event.stopPropagation()">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                
+                <form method="post" action="{% url 'content:publish_draft' draft.id %}" style="display: inline;" onclick="event.stopPropagation()">
+                    {% csrf_token %}
+                    <button type="submit" class="draft-action-btn publish">
+                        <i class="fas fa-paper-plane"></i> Publicar
+                    </button>
+                </form>
+                
+                <a href="{% url 'content:post_delete' draft.id %}" class="draft-action-btn delete" onclick="event.stopPropagation()">
+                    <i class="fas fa-trash"></i> Eliminar
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="drafts-empty">
+            <i class="fas fa-edit drafts-empty-icon"></i>
+            <h3 class="drafts-empty-title">No tienes borradores</h3>
+            <p class="drafts-empty-description">
+                Comienza creando una nueva publicación y guárdala como borrador para continuar más tarde.
+            </p>
+            <div class="drafts-actions">
+                <a href="{% url 'content:post_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Nueva Publicación
+                </a>
+                <a href="{% url 'content:post_list' %}" class="btn btn-social">
+                    <i class="fas fa-newspaper"></i> Ver Publicaciones
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Acciones Masivas -->
+    {% if drafts %}
+    <div class="drafts-bulk-actions">
+        <div class="bulk-select">
+            <input type="checkbox" id="selectAllDrafts" onchange="toggleSelectAllDrafts(this)">
+            <label for="selectAllDrafts">Seleccionar todos</label>
+        </div>
+        
+        <div class="bulk-actions">
+            <button class="bulk-action-btn" onclick="bulkPublishDrafts()">
+                <i class="fas fa-paper-plane"></i> Publicar seleccionados
+            </button>
+            <button class="bulk-action-btn" onclick="bulkDeleteDrafts()">
+                <i class="fas fa-trash"></i> Eliminar seleccionados
+            </button>
+            <button class="bulk-action-btn" onclick="bulkDuplicateDrafts()">
+                <i class="fas fa-copy"></i> Duplicar seleccionados
+            </button>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    {% include "content/base/pagination.html" with page_obj=page_obj %}
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtros de borradores
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            filterTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            filterDrafts(filter);
+        });
+    });
+
+    function filterDrafts(filter) {
+        const draftItems = document.querySelectorAll('.draft-item');
+        
+        draftItems.forEach(item => {
+            let show = true;
+            
+            switch(filter) {
+                case 'recent':
+                    // Mostrar solo borradores de los últimos 7 días
+                    const date = item.querySelector('.draft-meta span:first-child').textContent;
+                    // Lógica para filtrar por fecha
+                    break;
+                case 'media':
+                    // Mostrar solo borradores con multimedia
+                    const hasMedia = item.querySelector('.fa-image') !== null;
+                    show = hasMedia;
+                    break;
+                case 'incomplete':
+                    // Mostrar solo borradores incompletos (< 50%)
+                    const progress = parseInt(item.querySelector('.progress-text').textContent);
+                    show = progress < 50;
+                    break;
+            }
+            
+            item.style.display = show ? 'flex' : 'none';
+        });
+    }
+
+    // Publicación rápida de borradores
+    const publishForms = document.querySelectorAll('form[action*="publish_draft"]');
+    
+    publishForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (confirm('¿Estás seguro de que quieres publicar este borrador?')) {
+                // Mostrar loading
+                const button = this.querySelector('button');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+                button.disabled = true;
+                
+                // Enviar formulario
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        alert('Error al publicar el borrador');
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al publicar el borrador');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                });
+            }
+        });
+    });
+});
+
+// Funcionalidad de selección masiva
+function toggleSelectAllDrafts(checkbox) {
+    const draftCheckboxes = document.querySelectorAll('.draft-checkbox');
+    draftCheckboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+}
+
+function bulkPublishDrafts() {
+    const selectedDrafts = getSelectedDrafts();
+    if (selectedDrafts.length === 0) {
+        alert('Selecciona al menos un borrador');
+        return;
+    }
+    
+    if (confirm(`¿Publicar ${selectedDrafts.length} borrador(es)?`)) {
+        // Implementar publicación masiva
+        console.log('Publicando borradores:', selectedDrafts);
+    }
+}
+
+function bulkDeleteDrafts() {
+    const selectedDrafts = getSelectedDrafts();
+    if (selectedDrafts.length === 0) {
+        alert('Selecciona al menos un borrador');
+        return;
+    }
+    
+    if (confirm(`¿Eliminar ${selectedDrafts.length} borrador(es) permanentemente?`)) {
+        // Implementar eliminación masiva
+        console.log('Eliminando borradores:', selectedDrafts);
+    }
+}
+
+function bulkDuplicateDrafts() {
+    const selectedDrafts = getSelectedDrafts();
+    if (selectedDrafts.length === 0) {
+        alert('Selecciona al menos un borrador');
+        return;
+    }
+    
+    if (confirm(`¿Duplicar ${selectedDrafts.length} borrador(es)?`)) {
+        // Implementar duplicación masiva
+        console.log('Duplicando borradores:', selectedDrafts);
+    }
+}
+
+function getSelectedDrafts() {
+    const selected = [];
+    document.querySelectorAll('.draft-checkbox:checked').forEach(cb => {
+        selected.push(cb.value);
+    });
+    return selected;
+}
+
+// Auto-guardado simulado (para futura implementación)
+function startAutosave(draftId) {
+    setInterval(() => {
+        console.log(`Auto-guardando borrador ${draftId}...`);
+        // Aquí iría la lógica de auto-guardado real
+    }, 30000); // Cada 30 segundos
+}
+</script>
+{% endblock %}

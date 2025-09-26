@@ -1,0 +1,453 @@
+{% extends "content/base/base.html" %}
+{% load static %}
+
+{% block title %}{{ post.title }} - OnlyCubans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/content/posts/posts.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/posts/post_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="post-detail-container">
+    <!-- Header del Post -->
+    <div class="post-detail-header">
+        <div class="post-status-badge">
+            <span class="post-status status-{{ post.status }}">{{ post.get_status_display }}</span>
+            <span class="post-type type-{{ post.post_type }}">{{ post.get_post_type_display }}</span>
+        </div>
+        
+        <div class="post-header-content">
+            <h1 class="post-title">{{ post.title }}</h1>
+            
+            <div class="post-meta">
+                <div class="post-author">
+                    <img src="{% if post.author.profile_picture %}{{ post.author.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                         alt="{{ post.author.username }}" 
+                         class="author-avatar">
+                    <div class="author-info">
+                        <div class="author-name">{{ post.author.username }}</div>
+                        <div class="post-date">
+                            {% if post.published_at %}
+                                Publicado el {{ post.published_at|date:"d M Y" }} a las {{ post.published_at|date:"H:i" }}
+                            {% else %}
+                                No publicado
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if post.category %}
+                <div class="post-category">
+                    <span class="category-badge">{{ post.category.name }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="post-stats-overview">
+                <div class="stat-item-large">
+                    <span class="stat-value-large">{{ post.views_count }}</span>
+                    <span class="stat-label-large">Vistas</span>
+                </div>
+                <div class="stat-item-large">
+                    <span class="stat-value-large">{{ post.likes_count }}</span>
+                    <span class="stat-label-large">Me Gusta</span>
+                </div>
+                <div class="stat-item-large">
+                    <span class="stat-value-large">{{ post.comments_count }}</span>
+                    <span class="stat-label-large">Comentarios</span>
+                </div>
+                <div class="stat-item-large">
+                    <span class="stat-value-large">{{ post.shares_count }}</span>
+                    <span class="stat-label-large">Compartidos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido del Post -->
+    <div class="post-content">
+        {% if post.description %}
+        <div class="post-description">
+            {{ post.description|linebreaksbr }}
+        </div>
+        {% endif %}
+
+        <!-- Galería de Media -->
+        {% if post.media_files.exists %}
+        <div class="post-media-gallery">
+            <div class="gallery-main">
+                {% with first_media=post.media_files.first %}
+                {% if first_media.media_type == 'image' %}
+                <img src="{{ first_media.file.url }}" 
+                     alt="{{ first_media.file_name }}"
+                     class="main-media"
+                     id="mainMedia">
+                {% elif first_media.media_type == 'video' %}
+                <video controls class="main-media" id="mainMedia"
+                       poster="{% if first_media.thumbnail %}{{ first_media.thumbnail.url }}{% endif %}">
+                    <source src="{{ first_media.file.url }}" type="video/mp4">
+                    Tu navegador no soporta el elemento video.
+                </video>
+                {% else %}
+                <div class="main-media" style="display: flex; align-items: center; justify-content: center; background: var(--bg-secondary);">
+                    <i class="fas fa-file-{{ first_media.media_type }} fa-5x" style="color: var(--text-tertiary);"></i>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+
+            {% if post.media_files.count > 1 %}
+            <div class="media-thumbnails">
+                {% for media in post.media_files.all %}
+                <img src="{% if media.thumbnail %}{{ media.thumbnail.url }}{% else %}{{ media.file.url }}{% endif %}" 
+                     alt="{{ media.file_name }}"
+                     class="media-thumbnail {% if forloop.first %}active{% endif %}"
+                     data-media-url="{{ media.file.url }}"
+                     data-media-type="{{ media.media_type }}"
+                     onclick="changeMainMedia(this)">
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Tags -->
+        {% if post.tags.exists %}
+        <div class="post-tags">
+            <h4>Etiquetas:</h4>
+            <div class="tags-container">
+                {% for tag in post.tags.all %}
+                <span class="tag">{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Estadísticas Detalladas -->
+    <div class="post-stats-detailed">
+        <h3>Estadísticas Detalladas</h3>
+        <div class="stats-grid">
+            <div class="stat-card-detailed">
+                <i class="fas fa-eye stat-icon"></i>
+                <div class="stat-value-detailed">{{ post.views_count }}</div>
+                <div class="stat-label-detailed">Vistas Totales</div>
+                <div class="stat-trend trend-up">+12% esta semana</div>
+            </div>
+            <div class="stat-card-detailed">
+                <i class="fas fa-heart stat-icon"></i>
+                <div class="stat-value-detailed">{{ post.likes_count }}</div>
+                <div class="stat-label-detailed">Me Gusta</div>
+                <div class="stat-trend trend-up">+8% esta semana</div>
+            </div>
+            <div class="stat-card-detailed">
+                <i class="fas fa-comment stat-icon"></i>
+                <div class="stat-value-detailed">{{ post.comments_count }}</div>
+                <div class="stat-label-detailed">Comentarios</div>
+                <div class="stat-trend trend-up">+15% esta semana</div>
+            </div>
+            <div class="stat-card-detailed">
+                <i class="fas fa-share stat-icon"></i>
+                <div class="stat-value-detailed">{{ post.shares_count }}</div>
+                <div class="stat-label-detailed">Compartidos</div>
+                <div class="stat-trend trend-up">+5% esta semana</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones del Post -->
+    <div class="post-actions-detailed">
+        <h3>Gestionar Publicación</h3>
+        <div class="actions-grid">
+            <a href="{% url 'content:post_edit' post.id %}" class="action-button">
+                <i class="fas fa-edit action-icon"></i>
+                <span class="action-label">Editar</span>
+            </a>
+            
+            {% if post.status == 'draft' %}
+            <button class="action-button" onclick="publishPost()">
+                <i class="fas fa-check action-icon"></i>
+                <span class="action-label">Publicar</span>
+            </button>
+            {% elif post.status == 'published' %}
+            <button class="action-button" onclick="unpublishPost()">
+                <i class="fas fa-eye-slash action-icon"></i>
+                <span class="action-label">Ocultar</span>
+            </button>
+            {% endif %}
+            
+            <button class="action-button" onclick="duplicatePost()">
+                <i class="fas fa-copy action-icon"></i>
+                <span class="action-label">Duplicar</span>
+            </button>
+            
+            <a href="{% url 'content:post_delete' post.id %}" class="action-button">
+                <i class="fas fa-trash action-icon"></i>
+                <span class="action-label">Eliminar</span>
+            </a>
+            
+            <button class="action-button" onclick="sharePost()">
+                <i class="fas fa-share action-icon"></i>
+                <span class="action-label">Compartir</span>
+            </button>
+            
+            <button class="action-button" onclick="downloadAnalytics()">
+                <i class="fas fa-download action-icon"></i>
+                <span class="action-label">Descargar Stats</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Información Técnica -->
+    <div class="post-tech-info">
+        <h3>Información Técnica</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">ID del Post</span>
+                <span class="info-value">{{ post.id }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Creado el</span>
+                <span class="info-value">{{ post.created_at|date:"d M Y H:i" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Actualizado el</span>
+                <span class="info-value">{{ post.updated_at|date:"d M Y H:i" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Publicado el</span>
+                <span class="info-value">{{ post.published_at|date:"d M Y H:i"|default:"No publicado" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Programado para</span>
+                <span class="info-value">{{ post.scheduled_for|date:"d M Y H:i"|default:"No programado" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Dirección IP</span>
+                <span class="info-value">{{ post.ip_address|default:"No registrada" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Permite Comentarios</span>
+                <span class="info-value">{{ post.allow_comments|yesno:"Sí,No" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Permite Likes</span>
+                <span class="info-value">{{ post.allow_likes|yesno:"Sí,No" }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Media -->
+<div class="media-modal" id="mediaModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeMediaModal()">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="modal-nav modal-prev" onclick="navigateMedia(-1)">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="modal-nav modal-next" onclick="navigateMedia(1)">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div id="modalMediaContainer"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentMediaIndex = 0;
+const mediaItems = [];
+
+// Inicializar media items
+{% for media in post.media_files.all %}
+mediaItems.push({
+    url: "{{ media.file.url }}",
+    type: "{{ media.media_type }}",
+    name: "{{ media.file_name }}"
+});
+{% endfor %}
+
+function changeMainMedia(thumbnail) {
+    const mainMedia = document.getElementById('mainMedia');
+    const mediaUrl = thumbnail.getAttribute('data-media-url');
+    const mediaType = thumbnail.getAttribute('data-media-type');
+    
+    // Remover clase active de todos los thumbnails
+    document.querySelectorAll('.media-thumbnail').forEach(t => t.classList.remove('active'));
+    // Agregar clase active al thumbnail clickeado
+    thumbnail.classList.add('active');
+    
+    // Cambiar el media principal
+    if (mediaType === 'image') {
+        mainMedia.outerHTML = `<img src="${mediaUrl}" alt="${thumbnail.alt}" class="main-media" id="mainMedia">`;
+    } else if (mediaType === 'video') {
+        mainMedia.outerHTML = `
+            <video controls class="main-media" id="mainMedia">
+                <source src="${mediaUrl}" type="video/mp4">
+                Tu navegador no soporta el elemento video.
+            </video>
+        `;
+    }
+    
+    // Actualizar índice actual
+    currentMediaIndex = Array.from(document.querySelectorAll('.media-thumbnail')).indexOf(thumbnail);
+}
+
+function openMediaModal() {
+    const modal = document.getElementById('mediaModal');
+    const container = document.getElementById('modalMediaContainer');
+    const currentMedia = mediaItems[currentMediaIndex];
+    
+    if (currentMedia.type === 'image') {
+        container.innerHTML = `<img src="${currentMedia.url}" alt="${currentMedia.name}" class="modal-media">`;
+    } else if (currentMedia.type === 'video') {
+        container.innerHTML = `
+            <video controls class="modal-media">
+                <source src="${currentMedia.url}" type="video/mp4">
+                Tu navegador no soporta el elemento video.
+            </video>
+        `;
+    }
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMediaModal() {
+    const modal = document.getElementById('mediaModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function navigateMedia(direction) {
+    currentMediaIndex += direction;
+    
+    if (currentMediaIndex < 0) {
+        currentMediaIndex = mediaItems.length - 1;
+    } else if (currentMediaIndex >= mediaItems.length) {
+        currentMediaIndex = 0;
+    }
+    
+    const currentMedia = mediaItems[currentMediaIndex];
+    const container = document.getElementById('modalMediaContainer');
+    
+    if (currentMedia.type === 'image') {
+        container.innerHTML = `<img src="${currentMedia.url}" alt="${currentMedia.name}" class="modal-media">`;
+    } else if (currentMedia.type === 'video') {
+        container.innerHTML = `
+            <video controls class="modal-media">
+                <source src="${currentMedia.url}" type="video/mp4">
+                Tu navegador no soporta el elemento video.
+            </video>
+        `;
+    }
+    
+    // Actualizar thumbnails en la galería principal
+    document.querySelectorAll('.media-thumbnail').forEach((thumb, index) => {
+        thumb.classList.toggle('active', index === currentMediaIndex);
+    });
+}
+
+// Cerrar modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeMediaModal();
+    }
+});
+
+// Funciones de gestión del post
+function publishPost() {
+    if (confirm('¿Estás seguro de que quieres publicar este post?')) {
+        // Implementar publicación
+        fetch(`/content/posts/{{ post.id }}/publish/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+
+function unpublishPost() {
+    if (confirm('¿Estás seguro de que quieres ocultar este post?')) {
+        // Implementar ocultación
+        fetch(`/content/posts/{{ post.id }}/unpublish/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+
+function duplicatePost() {
+    if (confirm('¿Quieres duplicar este post?')) {
+        // Implementar duplicación
+        fetch(`/content/posts/{{ post.id }}/duplicate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect_url;
+            }
+        });
+    }
+}
+
+function sharePost() {
+    // Implementar compartir
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ post.title }}',
+            text: '{{ post.description|truncatewords:20 }}',
+            url: window.location.href
+        });
+    } else {
+        // Fallback para copiar enlace
+        navigator.clipboard.writeText(window.location.href);
+        alert('Enlace copiado al portapapeles');
+    }
+}
+
+function downloadAnalytics() {
+    // Implementar descarga de analytics
+    window.open(`/content/posts/{{ post.id }}/analytics/export/`);
+}
+
+// Utilidad para obtener CSRF token
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// Abrir modal al hacer clic en el media principal
+document.addEventListener('DOMContentLoaded', function() {
+    const mainMedia = document.getElementById('mainMedia');
+    if (mainMedia) {
+        mainMedia.style.cursor = 'pointer';
+        mainMedia.addEventListener('click', openMediaModal);
+    }
+});
+</script>
+{% endblock %}

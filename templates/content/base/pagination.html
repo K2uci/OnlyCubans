@@ -1,0 +1,84 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/content/base/pagination.css' %}">
+
+{% if page_obj.has_other_pages %}
+<div class="pagination pagination-{% if compact %}compact{% else %}default{% endif %}">
+    {% if not compact %}
+    <div class="pagination-info">
+        Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ page_obj.paginator.count }} resultados
+    </div>
+    {% endif %}
+    
+    <ul class="pagination-list">
+        <!-- Botón Anterior -->
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link page-prev" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                <i class="fas fa-chevron-left"></i>
+                <span class="desktop-hidden">Anterior</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <span class="page-link page-prev disabled">
+                <i class="fas fa-chevron-left"></i>
+                <span class="desktop-hidden">Anterior</span>
+            </span>
+        </li>
+        {% endif %}
+
+        <!-- Números de página -->
+        {% for i in page_obj.paginator.page_range %}
+            {% if page_obj.number == i %}
+            <li class="page-item">
+                <span class="page-link active" aria-current="page">{{ i }}</span>
+            </li>
+            {% elif i >= page_obj.number|add:-2 and i <= page_obj.number|add:2 %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+            </li>
+            {% elif i == 1 or i == page_obj.paginator.num_pages %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+            </li>
+            {% elif i == page_obj.number|add:-3 or i == page_obj.number|add:3 %}
+            <li class="page-item">
+                <span class="page-link ellipsis">...</span>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Botón Siguiente -->
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link page-next" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                <span class="desktop-hidden">Siguiente</span>
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <span class="page-link page-next disabled">
+                <span class="desktop-hidden">Siguiente</span>
+                <i class="fas fa-chevron-right"></i>
+            </span>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Paginación infinita -->
+{% if infinite_scroll %}
+<div class="pagination-load-more">
+    <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreContent()">
+        <i class="fas fa-plus"></i>
+        Cargar más contenido
+    </button>
+</div>
+
+<div class="infinite-scroll-indicator" id="infiniteScrollIndicator" style="display: none;">
+    <div class="loading-spinner"></div>
+    <span>Cargando más contenido...</span>
+</div>
+{% endif %}

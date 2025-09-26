@@ -1,0 +1,354 @@
+{% extends "content/base/base.html" %}
+{% load static %}
+
+{% block title %}Publicaciones - OnlyCubans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/content/posts/posts.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/posts/post_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="posts-container">
+    <!-- Header -->
+    <div class="posts-header">
+        <h1 class="posts-title">Tus Publicaciones</h1>
+        <p class="posts-subtitle">Gestiona y organiza todo tu contenido en un solo lugar</p>
+        <div class="posts-actions">
+            <a href="{% url 'content:post_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nueva Publicación
+            </a>
+            <a href="{% url 'content:post_draft_list' %}" class="btn btn-social">
+                <i class="fas fa-edit"></i> Ver Borradores
+            </a>
+            <a href="{% url 'content:analytics' %}" class="btn btn-social">
+                <i class="fas fa-chart-bar"></i> Ver Analíticas
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="posts-filters">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label class="filter-label">Estado</label>
+                <select class="filter-select" onchange="filterByStatus(this.value)">
+                    <option value="all">Todos los estados</option>
+                    <option value="published">Publicados</option>
+                    <option value="draft">Borradores</option>
+                    <option value="scheduled">Programados</option>
+                    <option value="hidden">Ocultos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Tipo</label>
+                <select class="filter-select" onchange="filterByType(this.value)">
+                    <option value="all">Todos los tipos</option>
+                    <option value="public">Público</option>
+                    <option value="premium">Premium</option>
+                    <option value="private">Privado</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Categoría</label>
+                <select class="filter-select" onchange="filterByCategory(this.value)">
+                    <option value="all">Todas las categorías</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Ordenar por</label>
+                <select class="filter-select" onchange="sortPosts(this.value)">
+                    <option value="newest">Más recientes</option>
+                    <option value="oldest">Más antiguos</option>
+                    <option value="popular">Más populares</option>
+                    <option value="views">Más vistos</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Posts -->
+    <div class="post-list-container">
+        <!-- Controles -->
+        <div class="post-list-header">
+            <div class="list-controls">
+                <div class="view-options">
+                    <button class="view-option active" data-view="grid">
+                        <i class="fas fa-th"></i> Grid
+                    </button>
+                    <button class="view-option" data-view="list">
+                        <i class="fas fa-list"></i> Lista
+                    </button>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="Buscar publicaciones..." 
+                           onkeyup="searchPosts(this.value)">
+                    <button class="search-button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <div class="results-info">
+                    <span class="results-count">{{ page_obj.paginator.count }} publicaciones</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid/Lista de Posts -->
+        <div class="posts-grid-view" id="postsView">
+            {% for post in page_obj %}
+            <div class="post-card-grid" onclick="window.location.href='{% url 'content:post_detail' post.id %}'">
+                {% if post.media_files.first %}
+                <img src="{{ post.media_files.first.file.url }}" 
+                     alt="{{ post.title }}"
+                     class="post-card-image">
+                {% else %}
+                <div class="post-card-image" style="background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-image fa-3x" style="color: var(--text-tertiary);"></i>
+                </div>
+                {% endif %}
+                
+                <div class="post-card-content">
+                    <div class="post-card-header">
+                        <span class="post-status status-{{ post.status }}">{{ post.get_status_display }}</span>
+                        <span class="post-type type-{{ post.post_type }}">{{ post.get_post_type_display }}</span>
+                    </div>
+                    
+                    <h3 class="post-card-title">{{ post.title|truncatewords:8 }}</h3>
+                    <p class="post-card-description">{{ post.description|truncatewords:15 }}</p>
+                    
+                    <div class="post-card-meta">
+                        <div class="post-card-stats">
+                            <span><i class="fas fa-eye"></i> {{ post.views_count }}</span>
+                            <span><i class="fas fa-heart"></i> {{ post.likes_count }}</span>
+                            <span><i class="fas fa-comment"></i> {{ post.comments_count }}</span>
+                        </div>
+                        <span class="post-date">{{ post.published_at|date:"M d, Y"|default:"No publicado" }}</span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="posts-empty">
+                <i class="fas fa-newspaper posts-empty-icon"></i>
+                <h3 class="posts-empty-title">No hay publicaciones</h3>
+                <p class="posts-empty-description">
+                    {% if request.GET %}
+                    No se encontraron publicaciones que coincidan con los filtros aplicados.
+                    {% else %}
+                    Comienza creando tu primera publicación para compartir con la comunidad.
+                    {% endif %}
+                </p>
+                <div class="posts-actions">
+                    <a href="{% url 'content:post_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Crear Primera Publicación
+                    </a>
+                    {% if request.GET %}
+                    <button class="btn btn-social" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Limpiar Filtros
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Acciones Rápidas -->
+        {% if page_obj %}
+        <div class="quick-actions-bar">
+            <div class="bulk-actions">
+                <label class="select-all">
+                    <input type="checkbox" onchange="toggleSelectAll(this)">
+                    <span>Seleccionar todo</span>
+                </label>
+                <button class="bulk-action-btn" onclick="bulkPublish()">
+                    <i class="fas fa-check"></i> Publicar
+                </button>
+                <button class="bulk-action-btn" onclick="bulkDelete()">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+                <button class="bulk-action-btn" onclick="bulkSchedule()">
+                    <i class="fas fa-clock"></i> Programar
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Paginación -->
+        {% if page_obj.has_other_pages %}
+        {% include "content/base/pagination.html" with page_obj=page_obj %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cambio de vista (Grid/Lista)
+    const viewOptions = document.querySelectorAll('.view-option');
+    const postsView = document.getElementById('postsView');
+    
+    viewOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            viewOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            
+            const viewType = this.dataset.view;
+            changeView(viewType);
+        });
+    });
+
+    function changeView(viewType) {
+        if (viewType === 'grid') {
+            postsView.className = 'posts-grid-view';
+        } else {
+            postsView.className = 'posts-list-view';
+            convertToListView();
+        }
+    }
+
+    function convertToListView() {
+        const postCards = postsView.querySelectorAll('.post-card-grid');
+        postCards.forEach(card => {
+            card.outerHTML = `
+                <div class="post-item-list" onclick="window.location.href='${card.onclick.toString().match(/window\.location\.href='([^']+)'/)[1]}'">
+                    ${card.querySelector('.post-card-image') ? `
+                    <img src="${card.querySelector('.post-card-image').src}" 
+                         alt="${card.querySelector('.post-card-title').textContent}"
+                         class="post-item-image">
+                    ` : `
+                    <div class="post-item-image" style="background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-image fa-2x" style="color: var(--text-tertiary);"></i>
+                    </div>
+                    `}
+                    <div class="post-item-content">
+                        <h3 class="post-item-title">${card.querySelector('.post-card-title').textContent}</h3>
+                        <p class="post-item-description">${card.querySelector('.post-card-description').textContent}</p>
+                        <div class="post-item-meta">
+                            <span class="post-status status-${card.querySelector('.post-status').className.split(' ')[1].split('-')[1]}">
+                                ${card.querySelector('.post-status').textContent}
+                            </span>
+                            <span class="post-type type-${card.querySelector('.post-type').className.split(' ')[1].split('-')[1]}">
+                                ${card.querySelector('.post-type').textContent}
+                            </span>
+                            <span><i class="fas fa-eye"></i> ${card.querySelector('.post-card-stats').children[0].textContent}</span>
+                            <span><i class="fas fa-heart"></i> ${card.querySelector('.post-card-stats').children[1].textContent}</span>
+                            <span><i class="fas fa-comment"></i> ${card.querySelector('.post-card-stats').children[2].textContent}</span>
+                            <span>${card.querySelector('.post-date').textContent}</span>
+                        </div>
+                    </div>
+                    <div class="post-item-actions">
+                        <button class="action-btn edit" onclick="event.stopPropagation(); editPost('${card.onclick.toString().match(/window\.location\.href='([^']+)'/)[1].split('/').slice(-2)[0]}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" onclick="event.stopPropagation(); deletePost('${card.onclick.toString().match(/window\.location\.href='([^']+)'/)[1].split('/').slice(-2)[0]}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Funcionalidad de búsqueda
+    let searchTimeout;
+    function searchPosts(query) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            console.log('Buscando:', query);
+            // Implementar búsqueda AJAX
+        }, 300);
+    }
+
+    // Funcionalidad de filtros
+    function filterByStatus(status) {
+        applyFilters();
+    }
+
+    function filterByType(type) {
+        applyFilters();
+    }
+
+    function filterByCategory(category) {
+        applyFilters();
+    }
+
+    function sortPosts(order) {
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const status = document.querySelector('[onchange="filterByStatus(this.value)"]').value;
+        const type = document.querySelector('[onchange="filterByType(this.value)"]').value;
+        const category = document.querySelector('[onchange="filterByCategory(this.value)"]').value;
+        const sort = document.querySelector('[onchange="sortPosts(this.value)"]').value;
+        
+        // Implementar aplicación de filtros via AJAX
+        console.log('Aplicando filtros:', { status, type, category, sort });
+    }
+
+    function clearFilters() {
+        document.querySelector('[onchange="filterByStatus(this.value)"]').value = 'all';
+        document.querySelector('[onchange="filterByType(this.value)"]').value = 'all';
+        document.querySelector('[onchange="filterByCategory(this.value)"]').value = 'all';
+        document.querySelector('[onchange="sortPosts(this.value)"]').value = 'newest';
+        applyFilters();
+    }
+
+    // Funcionalidad de acciones masivas
+    function toggleSelectAll(checkbox) {
+        const postCheckboxes = document.querySelectorAll('.post-checkbox');
+        postCheckboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+        });
+    }
+
+    function bulkPublish() {
+        const selectedPosts = getSelectedPosts();
+        if (selectedPosts.length === 0) {
+            alert('Selecciona al menos una publicación');
+            return;
+        }
+        if (confirm(`¿Publicar ${selectedPosts.length} publicación(es)?`)) {
+            // Implementar publicación masiva
+            console.log('Publicando:', selectedPosts);
+        }
+    }
+
+    function bulkDelete() {
+        const selectedPosts = getSelectedPosts();
+        if (selectedPosts.length === 0) {
+            alert('Selecciona al menos una publicación');
+            return;
+        }
+        if (confirm(`¿Eliminar ${selectedPosts.length} publicación(es) permanentemente?`)) {
+            // Implementar eliminación masiva
+            console.log('Eliminando:', selectedPosts);
+        }
+    }
+
+    function getSelectedPosts() {
+        const selected = [];
+        document.querySelectorAll('.post-checkbox:checked').forEach(cb => {
+            selected.push(cb.value);
+        });
+        return selected;
+    }
+});
+
+// Funciones de utilidad
+function editPost(postId) {
+    window.location.href = `/content/posts/${postId}/edit/`;
+}
+
+function deletePost(postId) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+        window.location.href = `/content/posts/${postId}/delete/`;
+    }
+}
+</script>
+{% endblock %}

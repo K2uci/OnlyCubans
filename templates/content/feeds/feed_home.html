@@ -4,24 +4,28 @@
 {% block title %}Mi Feed - OnlyCubans{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/content/feeds.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/feeds/feeds.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/feeds/feed_home.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="feeds-container">
-    <!-- Header del Feed -->
+    <!-- Feed Header -->
     <div class="feed-header">
-        <div class="feed-nav">
+        <nav class="feed-nav">
             <a href="{% url 'content:home_feed' %}" class="feed-nav-item active">
-                <i class="fas fa-home"></i> Mi Feed
+                <i class="fas fa-home"></i>
+                <span>Mi Feed</span>
             </a>
             <a href="{% url 'content:discover_feed' %}" class="feed-nav-item">
-                <i class="fas fa-compass"></i> Descubrir
+                <i class="fas fa-compass"></i>
+                <span>Descubrir</span>
             </a>
             <a href="{% url 'content:post_list' %}" class="feed-nav-item">
-                <i class="fas fa-fire"></i> Trending
+                <i class="fas fa-fire"></i>
+                <span>Trending</span>
             </a>
-        </div>
+        </nav>
 
         <div class="feed-filters">
             <div class="filter-group">
@@ -47,29 +51,96 @@
     <div class="feed-grid">
         <!-- Contenido Principal -->
         <div class="feed-main">
-            {% if page_obj %}
-                {% for post in page_obj %}
-                    {% include "content/base/post_card.html" with post=post %}
-                {% endfor %}
-
-                <!-- Paginación -->
-                {% include "content/base/pagination.html" with page_obj=page_obj %}
-            {% else %}
-                <!-- Estado vacío -->
-                <div class="feed-empty-state">
-                    <i class="fas fa-newspaper"></i>
-                    <h3>Tu feed está vacío</h3>
-                    <p>Comienza siguiendo a algunos creadores para ver su contenido aquí, o explora contenido nuevo en la sección de Descubrir.</p>
-                    <div class="empty-state-actions">
-                        <a href="{% url 'content:discover_feed' %}" class="btn btn-primary">
-                            <i class="fas fa-compass"></i> Explorar Contenido
+            <!-- Crear Post -->
+            <div class="home-feed">
+                <div class="feed-create-post">
+                    <div class="create-post-header">
+                        <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                             alt="{{ user.username }}" 
+                             class="create-post-avatar">
+                        <div class="create-post-prompt">¿Qué quieres compartir hoy, {{ user.username }}?</div>
+                    </div>
+                    <div class="create-post-actions">
+                        <a href="{% url 'content:post_create' %}" class="create-post-btn">
+                            <i class="fas fa-edit"></i>
+                            <span>Crear Post</span>
                         </a>
-                        <a href="#" class="btn btn-social">
-                            <i class="fas fa-users"></i> Descubrir Creadores
+                        <a href="#" class="create-post-btn">
+                            <i class="fas fa-image"></i>
+                            <span>Foto/Video</span>
+                        </a>
+                        <a href="#" class="create-post-btn">
+                            <i class="fas fa-poll"></i>
+                            <span>Encuesta</span>
                         </a>
                     </div>
                 </div>
-            {% endif %}
+
+                <!-- Stories -->
+                <div class="feed-stories">
+                    <div class="stories-title">Historias</div>
+                    <div class="stories-container">
+                        <a href="#" class="story-item story-add">
+                            <div class="story-avatar">
+                                <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                     alt="{{ user.username }}">
+                            </div>
+                            <div class="story-add-icon">+</div>
+                            <div class="story-username">Tu historia</div>
+                        </a>
+                        <!-- Stories de usuarios seguidos -->
+                        {% for followed_user in followed_users|slice:":10" %}
+                        <a href="#" class="story-item">
+                            <img src="{% if followed_user.profile_picture %}{{ followed_user.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                 alt="{{ followed_user.username }}" 
+                                 class="story-avatar">
+                            <div class="story-username">{{ followed_user.username }}</div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Contenido del Feed -->
+                <div class="feed-content">
+                    <div class="feed-sort">
+                        <h3 class="feed-sort-title">Publicaciones recientes</h3>
+                        <div class="feed-sort-options">
+                            <button class="sort-option active" data-sort="recent">Recientes</button>
+                            <button class="sort-option" data-sort="popular">Populares</button>
+                            <button class="sort-option" data-sort="following">Siguiendo</button>
+                        </div>
+                    </div>
+
+                    <div class="feed-posts">
+                        {% if page_obj %}
+                            {% for post in page_obj %}
+                                {% include "content/base/post_card.html" with post=post %}
+                            {% endfor %}
+
+                            <!-- Paginación -->
+                            {% include "content/base/pagination.html" with page_obj=page_obj %}
+                        {% else %}
+                            <!-- Estado vacío -->
+                            <div class="feed-empty-state">
+                                <i class="fas fa-newspaper feed-empty-icon"></i>
+                                <h3 class="feed-empty-title">Tu feed está vacío</h3>
+                                <p class="feed-empty-description">
+                                    Comienza siguiendo a algunos creadores para ver su contenido aquí, 
+                                    o explora contenido nuevo en la sección de Descubrir.
+                                </p>
+                                <div class="empty-state-actions">
+                                    <a href="{% url 'content:discover_feed' %}" class="btn btn-primary">
+                                        <i class="fas fa-compass"></i> Explorar Contenido
+                                    </a>
+                                    <a href="#" class="btn btn-social">
+                                        <i class="fas fa-users"></i> Descubrir Creadores
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Sidebar -->
@@ -81,27 +152,18 @@
                 </div>
                 <div class="widget-content">
                     <div class="suggested-creators">
-                        <!-- Estos se cargarían dinámicamente -->
+                        {% for suggested_creator in suggested_creators|slice:":5" %}
                         <div class="creator-item">
-                            <img src="{% static 'images/default-avatar.png' %}" 
-                                 alt="Creador" 
+                            <img src="{% if suggested_creator.profile_picture %}{{ suggested_creator.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                 alt="{{ suggested_creator.username }}" 
                                  class="creator-avatar-sm">
                             <div class="creator-details">
-                                <div class="creator-name">Ana_Cubana</div>
-                                <div class="creator-category">Música</div>
+                                <div class="creator-name">{{ suggested_creator.username }}</div>
+                                <div class="creator-category">{{ suggested_creator.creator_profile.category|default:"Creador" }}</div>
                             </div>
-                            <button class="follow-btn">Seguir</button>
+                            <button class="follow-btn" data-user-id="{{ suggested_creator.id }}">Seguir</button>
                         </div>
-                        <div class="creator-item">
-                            <img src="{% static 'images/default-avatar.png' %}" 
-                                 alt="Creador" 
-                                 class="creator-avatar-sm">
-                            <div class="creator-details">
-                                <div class="creator-name">Carlos_Art</div>
-                                <div class="creator-category">Arte</div>
-                            </div>
-                            <button class="follow-btn">Seguir</button>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -113,47 +175,40 @@
                 </div>
                 <div class="widget-content">
                     <div class="trending-list">
+                        {% for trending_post in trending_posts|slice:":5" %}
                         <div class="trending-item">
-                            <span class="trending-rank">1</span>
+                            <span class="trending-rank">{{ forloop.counter }}</span>
                             <div class="trending-content">
-                                <div class="trending-title">Nueva canción cubana</div>
-                                <div class="trending-metrics">1.2K vistas</div>
+                                <div class="trending-title">{{ trending_post.title|truncatewords:4 }}</div>
+                                <div class="trending-metrics">{{ trending_post.views_count }} vistas</div>
                             </div>
                         </div>
-                        <div class="trending-item">
-                            <span class="trending-rank">2</span>
-                            <div class="trending-content">
-                                <div class="trending-title">Recetas tradicionales</div>
-                                <div class="trending-metrics">980 vistas</div>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
 
-            <!-- Categorías Populares -->
+            <!-- Eventos -->
             <div class="sidebar-widget">
                 <div class="widget-header">
-                    <h3><i class="fas fa-tags"></i> Categorías</h3>
+                    <h3><i class="fas fa-calendar-alt"></i> Próximos Eventos</h3>
                 </div>
                 <div class="widget-content">
-                    <div class="categories-grid">
-                        <a href="#" class="category-item">
-                            <i class="fas fa-music category-icon"></i>
-                            <div class="category-name">Música</div>
-                        </a>
-                        <a href="#" class="category-item">
-                            <i class="fas fa-utensils category-icon"></i>
-                            <div class="category-name">Cocina</div>
-                        </a>
-                        <a href="#" class="category-item">
-                            <i class="fas fa-paint-brush category-icon"></i>
-                            <div class="category-name">Arte</div>
-                        </a>
-                        <a href="#" class="category-item">
-                            <i class="fas fa-dumbbell category-icon"></i>
-                            <div class="category-name">Deportes</div>
-                        </a>
+                    <div class="events-list">
+                        <div class="event-item">
+                            <div class="event-date">15 NOV</div>
+                            <div class="event-details">
+                                <div class="event-title">Concierto Virtual</div>
+                                <div class="event-time">8:00 PM</div>
+                            </div>
+                        </div>
+                        <div class="event-item">
+                            <div class="event-date">20 NOV</div>
+                            <div class="event-details">
+                                <div class="event-title">Taller de Cocina</div>
+                                <div class="event-time">3:00 PM</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -164,28 +219,50 @@
 
 {% block extra_js %}
 <script>
-function updateFeedSort(sortType) {
-    // Lógica para actualizar el orden del feed
-    console.log('Ordenar por:', sortType);
-    // Aquí iría la lógica AJAX para actualizar el feed
-}
+// JavaScript específico para el feed principal
+document.addEventListener('DOMContentLoaded', function() {
+    // Funcionalidad de ordenamiento
+    const sortOptions = document.querySelectorAll('.sort-option');
+    sortOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            sortOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            const sortType = this.dataset.sort;
+            updateFeedSort(sortType);
+        });
+    });
 
-function updateFeedType(contentType) {
-    // Lógica para filtrar por tipo de contenido
-    console.log('Filtrar por:', contentType);
-    // Aquí iría la lógica AJAX para filtrar el feed
-}
+    // Funcionalidad de seguir usuarios
+    const followButtons = document.querySelectorAll('.follow-btn');
+    followButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            toggleFollow(userId, this);
+        });
+    });
 
-// Cargar más contenido al hacer scroll
-window.addEventListener('scroll', function() {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
-        // Cargar más contenido
-        loadMoreContent();
-    }
+    // Carga infinita al hacer scroll
+    window.addEventListener('scroll', function() {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+            loadMorePosts();
+        }
+    });
 });
 
-function loadMoreContent() {
-    // Lógica para cargar más contenido via AJAX
+function updateFeedSort(sortType) {
+    console.log('Ordenar por:', sortType);
+    // Implementar lógica de ordenamiento
+}
+
+function toggleFollow(userId, button) {
+    // Implementar lógica de seguir/dejar de seguir
+    button.classList.toggle('following');
+    button.textContent = button.classList.contains('following') ? 'Siguiendo' : 'Seguir';
+}
+
+function loadMorePosts() {
+    // Implementar carga infinita
+    console.log('Cargando más posts...');
 }
 </script>
 {% endblock %}

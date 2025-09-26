@@ -4,52 +4,87 @@
 {% block title %}Dashboard - OnlyCubans{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/content/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/dashboard/dashboard.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- Header del Dashboard -->
-    <div class="dashboard-header">
-        <div class="welcome-section">
+    <!-- Welcome Section -->
+    <div class="dashboard-welcome">
+        <div class="welcome-content">
             <h1>Hola, {{ user.username }}! 👋</h1>
-            <p>Bienvenido a tu panel de control. Aquí tienes un resumen de tu actividad.</p>
+            <p class="welcome-subtitle">Bienvenido a tu panel de control. Aquí tienes un resumen de tu actividad y estadísticas.</p>
             
-            {% if user.is_creator %}
-            <div class="quick-stats">
+            <!-- Quick Stats -->
+            <div class="quick-stats-grid">
+                {% if user.is_creator %}
                 <div class="stat-card">
-                    <span class="stat-number">{{ stats.total_posts|default:0 }}</span>
-                    <span class="stat-label">Publicaciones</span>
+                    <div class="stat-value">{{ stats.total_posts|default:0 }}</div>
+                    <div class="stat-label">Publicaciones</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12% vs último mes</span>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-number">{{ stats.total_views|default:0 }}</span>
-                    <span class="stat-label">Vistas Totales</span>
+                    <div class="stat-value">{{ stats.total_views|default:0 }}</div>
+                    <div class="stat-label">Vistas Totales</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>8% vs último mes</span>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-number">{{ stats.total_likes|default:0 }}</span>
-                    <span class="stat-label">Me Gusta</span>
+                    <div class="stat-value">{{ stats.total_likes|default:0 }}</div>
+                    <div class="stat-label">Me Gusta</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>15% vs último mes</span>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-number">{{ user.creator_profile.total_subscribers|default:0 }}</span>
-                    <span class="stat-label">Suscriptores</span>
+                    <div class="stat-value">{{ user.creator_profile.total_subscribers|default:0 }}</div>
+                    <div class="stat-label">Suscriptores</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>5 nuevos este mes</span>
+                    </div>
                 </div>
+                {% else %}
+                <div class="stat-card">
+                    <div class="stat-value">{{ user.following_count }}</div>
+                    <div class="stat-label">Siguiendo</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>3 nuevos este mes</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ user.posts.count }}</div>
+                    <div class="stat-label">Mis Posts</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>2 nuevos este mes</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ user.bookmarks.count }}</div>
+                    <div class="stat-label">Guardados</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>7 nuevos este mes</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ user.followers_count }}</div>
+                    <div class="stat-label">Seguidores</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>5 nuevos este mes</span>
+                    </div>
+                </div>
+                {% endif %}
             </div>
-            {% else %}
-            <div class="quick-stats">
-                <div class="stat-card">
-                    <span class="stat-number">{{ user.following_count }}</span>
-                    <span class="stat-label">Siguiendo</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number">{{ user.posts.count }}</span>
-                    <span class="stat-label">Mis Posts</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number">{{ user.bookmarks.count }}</span>
-                    <span class="stat-label">Guardados</span>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -61,35 +96,26 @@
             <div class="dashboard-section">
                 <div class="section-header">
                     <h2><i class="fas fa-chart-line"></i> Métricas de Rendimiento</h2>
+                    <div class="section-actions">
+                        <a href="{% url 'content:analytics' %}" class="view-all-link">Ver analíticas completas</a>
+                    </div>
                 </div>
                 <div class="section-content">
-                    <div class="creator-stats">
-                        <div class="metric-item">
-                            <span class="metric-value">{{ stats.total_earnings|default:0|floatformat:2 }}$</span>
-                            <span class="metric-label">Ganancias Totales</span>
+                    <div class="performance-metrics">
+                        <div class="metric-card">
+                            <div class="metric-value">{{ stats.total_earnings|default:0|floatformat:2 }}$</div>
+                            <div class="metric-label">Ganancias Totales</div>
+                            <div class="metric-change change-positive">+12% este mes</div>
                         </div>
-                        <div class="metric-item">
-                            <span class="metric-value">{{ stats.engagement_rate|default:0|floatformat:1 }}%</span>
-                            <span class="metric-label">Tasa de Engagement</span>
+                        <div class="metric-card">
+                            <div class="metric-value">{{ stats.engagement_rate|default:0|floatformat:1 }}%</div>
+                            <div class="metric-label">Tasa de Engagement</div>
+                            <div class="metric-change change-positive">+3.2% este mes</div>
                         </div>
-                        <div class="metric-item">
-                            <span class="metric-value">{{ stats.avg_views|default:0 }}</span>
-                            <span class="metric-label">Vistas/Promedio</span>
-                        </div>
-                    </div>
-                    
-                    <div class="earnings-chart">
-                        <div class="chart-header">
-                            <h3>Ganancias Mensuales</h3>
-                            <select class="form-control" style="width: auto;">
-                                <option>Últimos 30 días</option>
-                                <option>Últimos 90 días</option>
-                                <option>Este año</option>
-                            </select>
-                        </div>
-                        <div class="chart-placeholder">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Gráfico de ganancias (próximamente)</span>
+                        <div class="metric-card">
+                            <div class="metric-value">{{ stats.avg_views|default:0 }}</div>
+                            <div class="metric-label">Vistas/Promedio</div>
+                            <div class="metric-change change-positive">+15% este mes</div>
                         </div>
                     </div>
                 </div>
@@ -100,10 +126,12 @@
             <div class="dashboard-section">
                 <div class="section-header">
                     <h2><i class="fas fa-bell"></i> Actividad Reciente</h2>
-                    <a href="#" class="view-all">Ver todo</a>
+                    <div class="section-actions">
+                        <a href="#" class="view-all-link">Ver todo</a>
+                    </div>
                 </div>
                 <div class="section-content">
-                    <div class="activity-list">
+                    <div class="activity-feed">
                         {% for like in recent_activity.new_likes|slice:":5" %}
                         <div class="activity-item">
                             <img src="{% if like.user.profile_picture %}{{ like.user.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
@@ -119,8 +147,8 @@
                         </div>
                         {% empty %}
                         <div class="empty-state">
-                            <i class="fas fa-bell-slash"></i>
-                            <h3>No hay actividad reciente</h3>
+                            <i class="fas fa-bell-slash empty-state-icon"></i>
+                            <div class="empty-state-title">No hay actividad reciente</div>
                             <p>Tu actividad aparecerá aquí cuando interactúen con tu contenido.</p>
                         </div>
                         {% endfor %}
@@ -132,11 +160,13 @@
             <div class="dashboard-section">
                 <div class="section-header">
                     <h2><i class="fas fa-newspaper"></i> Tus Publicaciones Recientes</h2>
-                    <a href="{% url 'content:post_create' %}" class="view-all">Crear nuevo</a>
+                    <div class="section-actions">
+                        <a href="{% url 'content:post_create' %}" class="view-all-link">Crear nuevo</a>
+                    </div>
                 </div>
                 <div class="section-content">
                     {% if recent_posts %}
-                    <div class="content-cards">
+                    <div class="content-cards-grid">
                         {% for post in recent_posts %}
                         <div class="content-card">
                             {% if post.media_files.first %}
@@ -144,15 +174,13 @@
                                  alt="{{ post.title }}"
                                  class="content-card-image">
                             {% else %}
-                            <div class="content-card-image" style="background: var(--gray-light); display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-image fa-2x" style="color: var(--text-gray);"></i>
+                            <div class="content-card-image" style="background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-image fa-2x" style="color: var(--text-tertiary);"></i>
                             </div>
                             {% endif %}
                             <div class="content-card-body">
                                 <h4 class="content-card-title">{{ post.title|truncatewords:8 }}</h4>
-                                <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: var(--spacing-sm);">
-                                    {{ post.description|truncatewords:12 }}
-                                </p>
+                                <p class="content-card-description">{{ post.description|truncatewords:12 }}</p>
                                 <div class="content-card-stats">
                                     <span><i class="fas fa-eye"></i> {{ post.views_count }}</span>
                                     <span><i class="fas fa-heart"></i> {{ post.likes_count }}</span>
@@ -164,12 +192,14 @@
                     </div>
                     {% else %}
                     <div class="empty-state">
-                        <i class="fas fa-edit"></i>
-                        <h3>No hay publicaciones aún</h3>
+                        <i class="fas fa-edit empty-state-icon"></i>
+                        <div class="empty-state-title">No hay publicaciones aún</div>
                         <p>Comienza creando tu primera publicación para compartir con la comunidad.</p>
-                        <a href="{% url 'content:post_create' %}" class="btn btn-primary mt-3">
-                            <i class="fas fa-plus"></i> Crear Primera Publicación
-                        </a>
+                        <div class="empty-state-actions">
+                            <a href="{% url 'content:post_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Crear Primera Publicación
+                            </a>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -186,24 +216,44 @@
                 <div class="section-content">
                     <div class="quick-actions">
                         <a href="{% url 'content:post_create' %}" class="quick-action-btn">
-                            <i class="fas fa-plus-circle"></i>
-                            <span>Nueva Publicación</span>
+                            <div class="quick-action-icon">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="quick-action-content">
+                                <div class="quick-action-title">Nueva Publicación</div>
+                                <div class="quick-action-desc">Comparte nuevo contenido</div>
+                            </div>
                         </a>
                         <a href="{% url 'content:post_draft_list' %}" class="quick-action-btn">
-                            <i class="fas fa-edit"></i>
-                            <span>Borradores</span>
+                            <div class="quick-action-icon">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <div class="quick-action-content">
+                                <div class="quick-action-title">Borradores</div>
+                                <div class="quick-action-desc">Continúa editando</div>
+                            </div>
                             {% if draft_count > 0 %}
                             <span class="action-badge">{{ draft_count }}</span>
                             {% endif %}
                         </a>
                         <a href="{% url 'content:home_feed' %}" class="quick-action-btn">
-                            <i class="fas fa-newspaper"></i>
-                            <span>Ver Feed</span>
+                            <div class="quick-action-icon">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                            <div class="quick-action-content">
+                                <div class="quick-action-title">Ver Feed</div>
+                                <div class="quick-action-desc">Explora contenido</div>
+                            </div>
                         </a>
                         {% if user.is_creator %}
-                        <a href="#" class="quick-action-btn">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Analíticas</span>
+                        <a href="{% url 'content:analytics' %}" class="quick-action-btn">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="quick-action-content">
+                                <div class="quick-action-title">Analíticas</div>
+                                <div class="quick-action-desc">Métricas detalladas</div>
+                            </div>
                         </a>
                         {% endif %}
                     </div>
@@ -244,16 +294,16 @@
                     <div class="system-notices">
                         <div class="notice-item">
                             <i class="fas fa-rocket text-primary"></i>
-                            <div>
-                                <strong>Nueva actualización disponible</strong>
-                                <p>Mejoras en el sistema de comentarios</p>
+                            <div class="notice-content">
+                                <div class="notice-title">Nueva actualización disponible</div>
+                                <div class="notice-text">Mejoras en el sistema de comentarios</div>
                             </div>
                         </div>
                         <div class="notice-item">
                             <i class="fas fa-gift text-primary"></i>
-                            <div>
-                                <strong>Evento especial</strong>
-                                <p>Gana premios por crear contenido</p>
+                            <div class="notice-content">
+                                <div class="notice-title">Evento especial</div>
+                                <div class="notice-text">Gana premios por crear contenido</div>
                             </div>
                         </div>
                     </div>

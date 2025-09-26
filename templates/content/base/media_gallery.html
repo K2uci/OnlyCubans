@@ -1,0 +1,119 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/content/base/media_gallery.css' %}">
+
+<div class="media-gallery">
+    <div class="gallery-header">
+        <h2 class="gallery-title">Galería de Medios</h2>
+        <div class="gallery-controls">
+            <select class="gallery-filter" onchange="filterMedia(this.value)">
+                <option value="all">Todos los medios</option>
+                <option value="image">Imágenes</option>
+                <option value="video">Videos</option>
+                <option value="audio">Audio</option>
+            </select>
+            
+            <div class="gallery-view-mode">
+                <button class="view-mode-btn active" data-view="grid" title="Vista de cuadrícula">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button class="view-mode-btn" data-view="list" title="Vista de lista">
+                    <i class="fas fa-list"></i>
+                </button>
+                <button class="view-mode-btn" data-view="masonry" title="Vista mosaico">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="gallery-grid grid-view" id="mediaGrid">
+        {% for media in media_list %}
+        <div class="gallery-item grid-view" data-media-type="{{ media.media_type }}" data-media-id="{{ media.id }}">
+            {% if media.media_type == 'image' %}
+            <img src="{{ media.file.url }}" 
+                 alt="{{ media.file_name }}"
+                 class="gallery-media"
+                 loading="lazy">
+            {% elif media.media_type == 'video' %}
+            <video class="gallery-media" poster="{% if media.thumbnail %}{{ media.thumbnail.url }}{% endif %}">
+                <source src="{{ media.file.url }}" type="video/mp4">
+            </video>
+            {% elif media.media_type == 'audio' %}
+            <div class="media-placeholder">
+                <i class="fas fa-music fa-3x"></i>
+                <span>{{ media.file_name }}</span>
+            </div>
+            {% else %}
+            <div class="media-placeholder">
+                <i class="fas fa-file fa-3x"></i>
+                <span>{{ media.file_name }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="gallery-overlay">
+                <div class="gallery-info">
+                    <div class="gallery-item-title">{{ media.file_name }}</div>
+                    <div class="gallery-item-meta">
+                        <span>{{ media.file_size|filesizeformat }}</span>
+                        <span>{{ media.get_media_type_display }}</span>
+                        <span>{{ media.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gallery-actions">
+                <button class="gallery-action-btn" title="Descargar" onclick="downloadMedia('{{ media.file.url }}')">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="gallery-action-btn" title="Compartir" onclick="shareMedia('{{ media.id }}')">
+                    <i class="fas fa-share"></i>
+                </button>
+                <button class="gallery-action-btn" title="Ver detalles" onclick="viewMediaDetails('{{ media.id }}')">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+            
+            {% if media.is_preview %}
+            <div class="gallery-badge badge-premium">Vista Previa</div>
+            {% endif %}
+            
+            {% if media.media_type == 'video' %}
+            <div class="media-type-indicator media-type-video">Video</div>
+            {% elif media.media_type == 'audio' %}
+            <div class="media-type-indicator media-type-audio">Audio</div>
+            {% elif media.media_type == 'document' %}
+            <div class="media-type-indicator media-type-document">Documento</div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="gallery-empty-state">
+            <i class="fas fa-images gallery-empty-icon"></i>
+            <div class="gallery-empty-text">No hay medios disponibles</div>
+            <p>Comienza subiendo contenido multimedia a tus publicaciones.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if media_list.has_other_pages %}
+    <div class="gallery-load-more">
+        <button class="load-more-btn" onclick="loadMoreMedia()">
+            <i class="fas fa-plus"></i>
+            Cargar más medios
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal para vista de medios -->
+<div class="media-modal" id="mediaModal" style="display: none;">
+    <div class="modal-overlay" onclick="closeMediaModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeMediaModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-media-container" id="modalMediaContainer">
+                <!-- El contenido del medio se cargará aquí -->
+            </div>
+        </div>
+    </div>
+</div>

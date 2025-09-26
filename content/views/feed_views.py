@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q,Count
 from ..models import Post
 from accounts.models import FollowerRelationship 
 from django.shortcuts import get_object_or_404, redirect
@@ -32,7 +32,7 @@ def home_feed(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'content/feed_home.html', {
+    return render(request, 'content/feeds/feed_home.html', {
         'page_obj': page_obj,
         'feed_type': 'home'
     })
@@ -47,7 +47,7 @@ def discover_feed(request):
     ).select_related('author', 'category').prefetch_related(
         'media_files', 'tags'
     ).annotate(
-        engagement_score=models.Count('likes') + models.Count('comments') * 2
+        engagement_score=Count('likes') + Count('comments') * 2
     ).order_by('-engagement_score', '-published_at')
     
     # Paginación
@@ -55,7 +55,7 @@ def discover_feed(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'content/feed_discover.html', {
+    return render(request, 'content/feeds/feed_discover.html', {
         'page_obj': page_obj,
         'feed_type': 'discover'
     })

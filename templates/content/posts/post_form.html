@@ -1,0 +1,450 @@
+{% extends "content/base/base.html" %}
+{% load static %}
+
+{% block title %}{% if editing %}Editar{% else %}Crear{% endif %} Publicación - OnlyCubans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/content/posts/posts.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/posts/post_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="post-form-container">
+    <!-- Header -->
+    <div class="post-form-header">
+        <h1 class="post-form-title">
+            {% if editing %}
+            <i class="fas fa-edit"></i> Editar Publicación
+            {% else %}
+            <i class="fas fa-plus"></i> Crear Nueva Publicación
+            {% endif %}
+        </h1>
+        <p class="post-form-subtitle">
+            {% if editing %}
+            Modifica tu publicación y actualiza el contenido
+            {% else %}
+            Comparte contenido increíble con la comunidad
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Formulario -->
+    <form class="post-form" method="post" enctype="multipart/form-data" id="postForm">
+        {% csrf_token %}
+        
+        <!-- Información Básica -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                Información Básica
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_title">Título *</label>
+                <input type="text" 
+                       id="id_title" 
+                       name="title" 
+                       class="form-control" 
+                       placeholder="Ingresa un título atractivo..."
+                       value="{{ form.title.value|default:'' }}"
+                       maxlength="200"
+                       required>
+                {% if form.title.errors %}
+                <div class="form-error">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_description">Descripción</label>
+                <textarea id="id_description" 
+                          name="description" 
+                          class="form-control" 
+                          placeholder="Describe tu publicación..."
+                          rows="4"
+                          maxlength="2000">{{ form.description.value|default:'' }}</textarea>
+                <div class="form-hint">Máximo 2000 caracteres</div>
+                {% if form.description.errors %}
+                <div class="form-error">{{ form.description.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Multimedia -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-images"></i>
+                Multimedia
+            </h3>
+
+            <div class="file-upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <div class="upload-text">Arrastra archivos aquí o haz clic para seleccionar</div>
+                <div class="upload-hint">PNG, JPG, MP4, MP3 hasta 100MB</div>
+                <input type="file" 
+                       id="fileInput" 
+                       class="file-input" 
+                       multiple 
+                       accept="image/*,video/*,audio/*">
+            </div>
+
+            <div class="media-preview" id="mediaPreview">
+                <!-- Los archivos subidos aparecerán aquí -->
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Archivos Actuales</label>
+                <div id="currentMedia">
+                    {% for media in post.media_files.all %}
+                    <div class="media-preview-item" data-media-id="{{ media.id }}">
+                        {% if media.media_type == 'image' %}
+                        <img src="{{ media.file.url }}" alt="{{ media.file_name }}" class="media-preview-image">
+                        {% elif media.media_type == 'video' %}
+                        <video class="media-preview-video">
+                            <source src="{{ media.file.url }}">
+                        </video>
+                        {% else %}
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100px;">
+                            <i class="fas fa-file fa-2x"></i>
+                        </div>
+                        {% endif %}
+                        <div class="media-preview-actions">
+                            <button type="button" class="preview-action" onclick="removeExistingMedia({{ media.id }})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-cog"></i>
+                Configuración
+            </h3>
+
+            <div class="form-group">
+                <label class="form-label" for="id_category">Categoría</label>
+                <select id="id_category" name="category" class="form-control">
+                    <option value="">Selecciona una categoría</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" 
+                            {% if form.category.value == category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_post_type">Tipo de Publicación</label>
+                <select id="id_post_type" name="post_type" class="form-control" onchange="togglePriceField()">
+                    {% for value, label in form.post_type.field.choices %}
+                    <option value="{{ value }}" 
+                            {% if form.post_type.value == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" id="priceField" style="display: none;">
+                <label class="form-label" for="id_price">Precio ($)</label>
+                <input type="number" 
+                       id="id_price" 
+                       name="price" 
+                       class="form-control" 
+                       step="0.01" 
+                       min="0" 
+                       value="{{ form.price.value|default:'0.00' }}"
+                       placeholder="0.00">
+                {% if form.price.errors %}
+                <div class="form-error">{{ form.price.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="advanced-settings">
+                <div class="setting-toggle">
+                    <span class="toggle-label">Contenido Exclusivo para Suscriptores</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" 
+                               id="id_is_exclusive" 
+                               name="is_exclusive"
+                               {% if form.is_exclusive.value %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-toggle">
+                    <span class="toggle-label">Permitir Comentarios</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" 
+                               id="id_allow_comments" 
+                               name="allow_comments"
+                               {% if form.allow_comments.value %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-toggle">
+                    <span class="toggle-label">Permitir Likes</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" 
+                               id="id_allow_likes" 
+                               name="allow_likes"
+                               {% if form.allow_likes.value %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-toggle">
+                    <span class="toggle-label">Permitir Compartir</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" 
+                               id="id_allow_sharing" 
+                               name="allow_sharing"
+                               {% if form.allow_sharing.value %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Programación -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-clock"></i>
+                Programación
+            </h3>
+
+            <div class="form-group">
+                <label class="form-label">Publicar inmediatamente</label>
+                <div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="publishNow" checked onchange="toggleSchedule()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group" id="scheduleField" style="display: none;">
+                <label class="form-label" for="id_scheduled_for">Programar para</label>
+                <input type="datetime-local" 
+                       id="id_scheduled_for" 
+                       name="scheduled_for" 
+                       class="form-control"
+                       value="{{ form.scheduled_for.value|default:'' }}">
+                {% if form.scheduled_for.errors %}
+                <div class="form-error">{{ form.scheduled_for.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Previsualización -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-eye"></i>
+                Previsualización
+            </h3>
+            <div class="preview-section">
+                <div class="preview-container" id="livePreview">
+                    <!-- La previsualización se generará aquí -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="form-actions">
+            <a href="{% if editing %}{% url 'content:post_detail' post.id %}{% else %}{% url 'content:post_list' %}{% endif %}" 
+               class="btn-secondary">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
+            
+            <button type="submit" name="action" value="draft" class="btn-secondary">
+                <i class="fas fa-save"></i> Guardar Borrador
+            </button>
+            
+            <button type="submit" name="action" value="publish" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> 
+                {% if editing %}Actualizar{% else %}Publicar{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let uploadedFiles = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar campos
+    togglePriceField();
+    toggleSchedule();
+    updatePreview();
+
+    // Configurar drag and drop
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    // Actualizar previsualización en tiempo real
+    document.getElementById('id_title').addEventListener('input', updatePreview);
+    document.getElementById('id_description').addEventListener('input', updatePreview);
+});
+
+function handleFiles(files) {
+    for (let file of files) {
+        if (validateFile(file)) {
+            uploadedFiles.push(file);
+            addFilePreview(file);
+        }
+    }
+    updateFileInput();
+}
+
+function validateFile(file) {
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'audio/mpeg'];
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    
+    if (!validTypes.includes(file.type)) {
+        alert('Tipo de archivo no válido. Solo se permiten imágenes, videos y audio.');
+        return false;
+    }
+    
+    if (file.size > maxSize) {
+        alert('El archivo es demasiado grande. Máximo 100MB.');
+        return false;
+    }
+    
+    return true;
+}
+
+function addFilePreview(file) {
+    const preview = document.getElementById('mediaPreview');
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'media-preview-item';
+        previewItem.innerHTML = `
+            ${file.type.startsWith('image') ? 
+                `<img src="${e.target.result}" alt="${file.name}" class="media-preview-image">` :
+            file.type.startsWith('video') ?
+                `<video class="media-preview-video"><source src="${e.target.result}"></video>` :
+                `<div style="display: flex; align-items: center; justify-content: center; height: 100px;">
+                    <i class="fas fa-file fa-2x"></i>
+                </div>`
+            }
+            <div class="media-preview-actions">
+                <button type="button" class="preview-action" onclick="removeFilePreview(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        preview.appendChild(previewItem);
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+function removeFilePreview(button) {
+    const previewItem = button.closest('.media-preview-item');
+    const index = Array.from(previewItem.parentNode.children).indexOf(previewItem);
+    uploadedFiles.splice(index, 1);
+    previewItem.remove();
+    updateFileInput();
+}
+
+function removeExistingMedia(mediaId) {
+    if (confirm('¿Estás seguro de que quieres eliminar este archivo?')) {
+        // Agregar input hidden para indicar que se debe eliminar
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'delete_media';
+        input.value = mediaId;
+        document.getElementById('postForm').appendChild(input);
+        
+        const mediaItem = document.querySelector(`[data-media-id="${mediaId}"]`);
+        mediaItem.remove();
+    }
+}
+
+function updateFileInput() {
+    // Crear un nuevo DataTransfer para los archivos
+    const dt = new DataTransfer();
+    uploadedFiles.forEach(file => dt.items.add(file));
+    document.getElementById('fileInput').files = dt.files;
+}
+
+function togglePriceField() {
+    const postType = document.getElementById('id_post_type').value;
+    const priceField = document.getElementById('priceField');
+    priceField.style.display = postType === 'premium' ? 'block' : 'none';
+}
+
+function toggleSchedule() {
+    const publishNow = document.getElementById('publishNow').checked;
+    const scheduleField = document.getElementById('scheduleField');
+    scheduleField.style.display = publishNow ? 'none' : 'block';
+}
+
+function updatePreview() {
+    const title = document.getElementById('id_title').value;
+    const description = document.getElementById('id_description').value;
+    const preview = document.getElementById('livePreview');
+    
+    preview.innerHTML = `
+        <div style="padding: 20px; font-family: Arial, sans-serif;">
+            <h2 style="color: #333; margin-bottom: 10px;">${title || 'Título de la publicación'}</h2>
+            <p style="color: #666; line-height: 1.6;">${description || 'Descripción de la publicación...'}</p>
+            <div style="margin-top: 20px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                <small style="color: #999;">Vista previa en tiempo real</small>
+            </div>
+        </div>
+    `;
+}
+
+// Validación del formulario
+document.getElementById('postForm').addEventListener('submit', function(e) {
+    const title = document.getElementById('id_title').value.trim();
+    if (!title) {
+        e.preventDefault();
+        alert('El título es obligatorio');
+        return;
+    }
+    
+    // Validación adicional para contenido premium
+    const postType = document.getElementById('id_post_type').value;
+    const price = document.getElementById('id_price').value;
+    
+    if (postType === 'premium' && parseFloat(price) <= 0) {
+        e.preventDefault();
+        alert('El contenido premium debe tener un precio mayor a 0');
+        return;
+    }
+});
+</script>
+{% endblock %}

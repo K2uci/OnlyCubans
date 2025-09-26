@@ -1,0 +1,370 @@
+{% extends "content/base/base.html" %}
+{% load static %}
+
+{% block title %}{{ creator.username }} - OnlyCubans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/content/feeds/feeds.css' %}">
+<link rel="stylesheet" href="{% static 'css/content/feeds/feed_creator.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="feeds-container">
+    <!-- Feed Header -->
+    <div class="feed-header">
+        <nav class="feed-nav">
+            <a href="{% url 'content:home_feed' %}" class="feed-nav-item">
+                <i class="fas fa-home"></i>
+                <span>Mi Feed</span>
+            </a>
+            <a href="{% url 'content:discover_feed' %}" class="feed-nav-item">
+                <i class="fas fa-compass"></i>
+                <span>Descubrir</span>
+            </a>
+            <a href="{% url 'content:post_list' %}" class="feed-nav-item">
+                <i class="fas fa-fire"></i>
+                <span>Trending</span>
+            </a>
+        </nav>
+
+        <div class="feed-filters">
+            <div class="filter-group">
+                <span class="filter-label">Filtrar:</span>
+                <select class="filter-select" onchange="filterCreatorContent(this.value)">
+                    <option value="all">Todo el contenido</option>
+                    <option value="free">Gratuito</option>
+                    <option value="premium">Premium</option>
+                    <option value="media">Solo multimedia</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="feed-grid">
+        <!-- Contenido Principal -->
+        <div class="feed-main">
+            <div class="creator-feed">
+                <!-- Header del Creador -->
+                <div class="creator-header">
+                    <img src="{% if creator.profile_picture %}{{ creator.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                         alt="{{ creator.username }}" 
+                         class="creator-avatar-large">
+                    <h1 class="creator-name">{{ creator.username }}</h1>
+                    <p class="creator-bio">{{ creator.creator_profile.about|default:"Creador de contenido en OnlyCubans" }}</p>
+                    
+                    <div class="creator-stats">
+                        <div class="creator-stat">
+                            <span class="creator-stat-value">{{ creator.followers_count }}</span>
+                            <span class="creator-stat-label">Seguidores</span>
+                        </div>
+                        <div class="creator-stat">
+                            <span class="creator-stat-value">{{ creator.posts.count }}</span>
+                            <span class="creator-stat-label">Publicaciones</span>
+                        </div>
+                        <div class="creator-stat">
+                            <span class="creator-stat-value">{{ creator.creator_profile.total_subscribers }}</span>
+                            <span class="creator-stat-label">Suscriptores</span>
+                        </div>
+                        <div class="creator-stat">
+                            <span class="creator-stat-value">{{ total_views }}</span>
+                            <span class="creator-stat-label">Vistas</span>
+                        </div>
+                    </div>
+
+                    <div class="creator-actions">
+                        {% if user != creator %}
+                            {% if has_access %}
+                            <button class="subscribe-btn subscribed" data-creator-id="{{ creator.id }}">
+                                <i class="fas fa-check"></i>
+                                Suscrito
+                            </button>
+                            {% else %}
+                            <button class="subscribe-btn" data-creator-id="{{ creator.id }}" 
+                                    data-price="{{ creator.subscription_price }}">
+                                <i class="fas fa-crown"></i>
+                                Suscribirse - ${{ creator.subscription_price }}/mes
+                            </button>
+                            {% endif %}
+                            <button class="message-btn" data-creator-id="{{ creator.id }}">
+                                <i class="fas fa-envelope"></i>
+                                Mensaje
+                            </button>
+                        {% else %}
+                            <a href="{% url 'content:post_create' %}" class="subscribe-btn">
+                                <i class="fas fa-plus"></i>
+                                Crear Publicación
+                            </a>
+                            <a href="{% url 'content:creator_dashboard' %}" class="message-btn">
+                                <i class="fas fa-chart-bar"></i>
+                                Dashboard
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Banner Premium -->
+                {% if creator.has_active_subscription_model and not has_access and user != creator %}
+                <div class="premium-banner">
+                    <div class="premium-banner-content">
+                        <i class="fas fa-crown premium-icon"></i>
+                        <span class="premium-text">Contenido Exclusivo Disponible</span>
+                        <span class="premium-price">${{ creator.subscription_price }}/mes</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Contenido del Creador -->
+                <div class="creator-content">
+                    <!-- Filtros de Contenido -->
+                    <div class="content-filter">
+                        <button class="filter-tab active" data-filter="all">Todo</button>
+                        <button class="filter-tab" data-filter="posts">Publicaciones</button>
+                        <button class="filter-tab" data-filter="media">Multimedia</button>
+                        <button class="filter-tab" data-filter="premium">Premium</button>
+                        {% if user == creator %}
+                        <button class="filter-tab" data-filter="drafts">Borradores</button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Grid de Contenido -->
+                    <div class="content-grid">
+                        {% if page_obj %}
+                            {% for post in page_obj %}
+                                {% if has_access or post.post_type == 'public' or user == creator %}
+                                <div class="content-item" data-type="{{ post.post_type }}" data-media="{{ post.media_files.exists|yesno:'true,false' }}">
+                                    {% include "content/base/post_card.html" with post=post %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-edit empty-state-icon"></i>
+                                <h3 class="empty-state-title">
+                                    {% if user == creator %}
+                                    Aún no tienes publicaciones
+                                    {% else %}
+                                    {{ creator.username }} aún no ha publicado contenido
+                                    {% endif %}
+                                </h3>
+                                <p class="empty-state-description">
+                                    {% if user == creator %}
+                                    Comparte tu primer contenido con la comunidad
+                                    {% else %}
+                                    Vuelve más tarde para ver nuevo contenido
+                                    {% endif %}
+                                </p>
+                                {% if user == creator %}
+                                <div class="empty-state-actions">
+                                    <a href="{% url 'content:post_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Crear Primera Publicación
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Requiere Suscripción -->
+                    {% if creator.has_active_subscription_model and not has_access and user != creator %}
+                    <div class="subscription-required">
+                        <i class="fas fa-lock subscription-icon"></i>
+                        <h3 class="subscription-title">Contenido Exclusivo para Suscriptores</h3>
+                        <p class="subscription-description">
+                            Suscríbete para acceder a todo el contenido premium de {{ creator.username }} 
+                            por solo ${{ creator.subscription_price }} al mes.
+                        </p>
+                        <button class="subscribe-btn" data-creator-id="{{ creator.id }}">
+                            <i class="fas fa-crown"></i>
+                            Suscribirse Ahora
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    <!-- Paginación -->
+                    {% if page_obj.has_other_pages %}
+                    {% include "content/base/pagination.html" with page_obj=page_obj %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="feed-sidebar">
+            <!-- Información del Creador -->
+            <div class="sidebar-widget">
+                <div class="widget-header">
+                    <h3><i class="fas fa-info-circle"></i> Sobre {{ creator.username }}</h3>
+                </div>
+                <div class="widget-content">
+                    <div class="creator-details">
+                        <div class="detail-item">
+                            <strong>Categoría:</strong>
+                            <span>{{ creator.creator_profile.category|default:"General" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Miembro desde:</strong>
+                            <span>{{ creator.date_joined|date:"M Y" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Ubicación:</strong>
+                            <span>La Habana, Cuba</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Idiomas:</strong>
+                            <span>Español, Inglés</span>
+                        </div>
+                    </div>
+                    
+                    {% if creator.creator_profile.content_preview %}
+                    <div class="content-preview">
+                        <h4>Vista Previa del Contenido</h4>
+                        <p>{{ creator.creator_profile.content_preview }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Estadísticas Públicas -->
+            <div class="sidebar-widget">
+                <div class="widget-header">
+                    <h3><i class="fas fa-chart-bar"></i> Estadísticas</h3>
+                </div>
+                <div class="widget-content">
+                    <div class="public-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ engagement_rate }}%</span>
+                            <span class="stat-label">Tasa de Engagement</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ avg_likes }}</span>
+                            <span class="stat-label">Likes/Promedio</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ post_frequency }}/semana</span>
+                            <span class="stat-label">Frecuencia</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Creadores Similares -->
+            <div class="sidebar-widget">
+                <div class="widget-header">
+                    <h3><i class="fas fa-users"></i> Creadores Similares</h3>
+                </div>
+                <div class="widget-content">
+                    <div class="similar-creators">
+                        {% for similar_creator in similar_creators|slice:":3" %}
+                        <a href="{% url 'content:creator_feed' similar_creator.username %}" class="similar-creator">
+                            <img src="{% if similar_creator.profile_picture %}{{ similar_creator.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                 alt="{{ similar_creator.username }}" 
+                                 class="similar-creator-avatar">
+                            <div class="similar-creator-info">
+                                <div class="similar-creator-name">{{ similar_creator.username }}</div>
+                                <div class="similar-creator-category">{{ similar_creator.creator_profile.category|default:"Creador" }}</div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews -->
+            <div class="sidebar-widget">
+                <div class="widget-header">
+                    <h3><i class="fas fa-star"></i> Reseñas</h3>
+                </div>
+                <div class="widget-content">
+                    <div class="reviews-summary">
+                        <div class="rating">
+                            <span class="rating-stars">★★★★★</span>
+                            <span class="rating-value">4.8</span>
+                            <span class="rating-count">(124 reseñas)</span>
+                        </div>
+                    </div>
+                    <div class="recent-review">
+                        <div class="review-text">"Excelente contenido, muy profesional"</div>
+                        <div class="review-author">- María L.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtros de contenido
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const contentItems = document.querySelectorAll('.content-item');
+    
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            filterTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            filterContent(filter);
+        });
+    });
+
+    function filterContent(filter) {
+        contentItems.forEach(item => {
+            if (filter === 'all') {
+                item.style.display = 'block';
+            } else if (filter === 'posts') {
+                item.style.display = item.dataset.media === 'false' ? 'block' : 'none';
+            } else if (filter === 'media') {
+                item.style.display = item.dataset.media === 'true' ? 'block' : 'none';
+            } else if (filter === 'premium') {
+                item.style.display = item.dataset.type === 'premium' ? 'block' : 'none';
+            } else if (filter === 'drafts') {
+                // Lógica para borradores
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // Suscripción
+    const subscribeBtn = document.querySelector('.subscribe-btn');
+    if (subscribeBtn && !subscribeBtn.classList.contains('subscribed')) {
+        subscribeBtn.addEventListener('click', function() {
+            const creatorId = this.dataset.creatorId;
+            const price = this.dataset.price;
+            
+            if (confirm(`¿Deseas suscribirte a este creador por $${price}/mes?`)) {
+                subscribeToCreator(creatorId, this);
+            }
+        });
+    }
+
+    function subscribeToCreator(creatorId, button) {
+        // Simular suscripción
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+        
+        setTimeout(() => {
+            button.classList.add('subscribed');
+            button.innerHTML = '<i class="fas fa-check"></i> Suscrito';
+            alert('¡Suscripción exitosa! Ahora tienes acceso al contenido premium.');
+            location.reload(); // Recargar para mostrar contenido premium
+        }, 2000);
+    }
+
+    // Mensajes
+    const messageBtn = document.querySelector('.message-btn');
+    if (messageBtn) {
+        messageBtn.addEventListener('click', function() {
+            const creatorId = this.dataset.creatorId;
+            openMessaging(creatorId);
+        });
+    }
+
+    function openMessaging(creatorId) {
+        // Abrir modal de mensajes
+        alert('Funcionalidad de mensajería en desarrollo');
+    }
+});
+</script>
+{% endblock %}
