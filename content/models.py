@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.urls import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 import os
@@ -148,6 +149,10 @@ class Post(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.author.username}"
+    
+
+    def get_absolute_url(self):
+        return reverse('content:post_detail', kwargs={'pk': self.pk})
     
     def save(self, *args, **kwargs):
         if self.status == 'published' and not self.published_at:

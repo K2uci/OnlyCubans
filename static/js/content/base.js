@@ -288,3 +288,18 @@ function openMediaModal(mediaUrl, mediaType) {
     }
   });
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  const profileBtn = document.getElementById("profileBtn");
+  const profileMenu = document.querySelector(".profile-menu");
+
+  profileBtn.addEventListener("click", function (event) {
+    event.stopPropagation();
+    profileMenu.classList.toggle("show");
+  });
+
+  // Cerrar el menú si se hace clic fuera de él
+  document.addEventListener("click", function () {
+    profileMenu.classList.remove("show");
+  });
+});

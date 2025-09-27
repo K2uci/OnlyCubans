@@ -13,7 +13,7 @@ from ..forms import PostForm, MediaForm, PostSearchForm, CommentForm
 
 class PostListView(LoginRequiredMixin, ListView):
     model = Post
-    template_name = 'content/post_list.html'
+    template_name = 'content/posts/posts/post_list.html'
     context_object_name = 'posts'
     paginate_by = 20
     
@@ -82,7 +82,7 @@ class PostListView(LoginRequiredMixin, ListView):
 
 class PostDetailView(LoginRequiredMixin, DetailView):
     model = Post
-    template_name = 'content/post_detail.html'
+    template_name = 'content/posts/post_detail.html'
     context_object_name = 'post'
     
     def get_queryset(self):
@@ -222,7 +222,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     form_class = PostForm
-    template_name = 'content/post_form.html'
+    template_name = 'content/posts/post_form.html'
     
     def test_func(self):
         post = self.get_object()
@@ -270,7 +270,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
-    template_name = 'content/post_confirm_delete.html'
+    template_name = 'content/posts/post_confirm_delete.html'
     success_url = reverse_lazy('content:post_list')
     
     def test_func(self):
