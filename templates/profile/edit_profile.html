@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Perfil - {{ user.username }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile_edit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-edit-container">
+    <div class="edit-header">
+        <h1><i class="fas fa-user-edit"></i> Editar Perfil</h1>
+        <p>Actualiza tu información personal y configuración</p>
+    </div>
+
+    <div class="edit-content">
+        <!-- Navegación lateral -->
+        <div class="edit-sidebar">
+            <nav class="edit-nav">
+                <a href="#basic-info" class="nav-item active" data-tab="basic-info">
+                    <i class="fas fa-user"></i>
+                    <span>Información Básica</span>
+                </a>
+                <a href="#profile-settings" class="nav-item" data-tab="profile-settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </a>
+                <a href="#appearance" class="nav-item" data-tab="appearance">
+                    <i class="fas fa-palette"></i>
+                    <span>Apariencia</span>
+                </a>
+                <a href="#security" class="nav-item" data-tab="security">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Seguridad</span>
+                </a>
+                <a href="#premium" class="nav-item" data-tab="premium">
+                    <i class="fas fa-crown"></i>
+                    <span>Premium</span>
+                </a>
+                <a href="#verification" class="nav-item" data-tab="verification">
+                    <i class="fas fa-badge-check"></i>
+                    <span>Verificación</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="edit-main">
+            <form method="post" enctype="multipart/form-data" class="profile-edit-form">
+                {% csrf_token %}
+                
+                <!-- Información Básica -->
+                <div id="basic-info" class="tab-content active">
+                    <div class="section-card">
+                        <h3><i class="fas fa-id-card"></i> Información Personal</h3>
+                        
+                        <div class="avatar-section">
+                            <div class="avatar-preview">
+                                <img id="avatar-preview" src="{{ user.profile_picture.url|default:'/static/images/default-avatar.png' }}" 
+                                     alt="Avatar actual">
+                                <div class="avatar-overlay">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Cambiar foto</span>
+                                </div>
+                            </div>
+                            <input type="file" id="id_profile_picture" name="profile_picture" 
+                                   accept="image/*" class="avatar-input" style="display: none;">
+                            
+                            <div class="cover-preview">
+                                <img id="cover-preview" src="{{ user.cover_photo.url|default:'/static/images/default-cover.jpg' }}" 
+                                     alt="Portada actual">
+                                <div class="cover-overlay">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Cambiar portada</span>
+                                </div>
+                            </div>
+                            <input type="file" id="id_cover_photo" name="cover_photo" 
+                                   accept="image/*" class="cover-input" style="display: none;">
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="id_username">Nombre de usuario *</label>
+                                <input type="text" id="id_username" name="username" 
+                                       value="{{ form.username.value|default:user.username }}" 
+                                       class="form-control" required>
+                                <small class="form-text">Este es tu nombre único en la plataforma</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_email">Email *</label>
+                                <input type="email" id="id_email" name="email" 
+                                       value="{{ form.email.value|default:user.email }}" 
+                                       class="form-control" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_first_name">Nombre</label>
+                                <input type="text" id="id_first_name" name="first_name" 
+                                       value="{{ form.first_name.value|default:user.first_name }}" 
+                                       class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_last_name">Apellido</label>
+                                <input type="text" id="id_last_name" name="last_name" 
+                                       value="{{ form.last_name.value|default:user.last_name }}" 
+                                       class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_bio">Biografía</label>
+                                <textarea id="id_bio" name="bio" class="form-control" 
+                                          rows="4" maxlength="500">{{ form.bio.value|default:user.bio }}</textarea>
+                                <div class="char-counter"><span id="bio-chars">0</span>/500</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_website">Sitio web</label>
+                                <input type="url" id="id_website" name="website" 
+                                       value="{{ form.website.value|default:user.website }}" 
+                                       class="form-control" placeholder="https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-card">
+                        <h3><i class="fas fa-venus-mars"></i> Información Demográfica</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="id_gender">Género</label>
+                                <select id="id_gender" name="gender" class="form-control">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Masculino</option>
+                                    <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Femenino</option>
+                                    <option value="other" {% if user.gender == 'other' %}selected{% endif %}>Otro</option>
+                                    <option value="prefer_not_to_say" {% if user.gender == 'prefer_not_to_say' %}selected{% endif %}>Prefiero no decir</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_birth_date">Fecha de nacimiento</label>
+                                <input type="date" id="id_birth_date" name="birth_date" 
+                                       value="{{ user.birth_date|date:'Y-m-d' }}" 
+                                       class="form-control">
+                                {% if user.birth_date %}
+                                <small class="form-text">Edad: {{ user.age }} años</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_phone_number">Teléfono</label>
+                                <input type="tel" id="id_phone_number" name="phone_number" 
+                                       value="{{ form.phone_number.value|default:user.phone_number }}" 
+                                       class="form-control" placeholder="+34 123 456 789">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración de Perfil -->
+                <div id="profile-settings" class="tab-content">
+                    <div class="section-card">
+                        <h3><i class="fas fa-lock"></i> Privacidad</h3>
+                        
+                        <div class="switch-group">
+                            <div class="switch-item">
+                                <div class="switch-info">
+                    <h4>Perfil privado</h4>
+                    <p>Solo tus seguidores aprobados pueden ver tu contenido</p>
+                                </div>
+                                <label class="switch">
+                    <input type="checkbox" name="profile_private" {% if user.settings.profile_private %}checked{% endif %}>
+                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-item">
+                                <div class="switch-info">
+                    <h4>Mostrar estado en línea</h4>
+                    <p>Permitir que otros vean cuando estás activo</p>
+                                </div>
+                                <label class="switch">
+                    <input type="checkbox" name="show_online_status" {% if user.settings.show_online_status %}checked{% endif %}>
+                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-item">
+                                <div class="switch-info">
+                    <h4>Mostrar fecha de nacimiento</h4>
+                    <p>Hacer visible tu fecha de nacimiento en el perfil</p>
+                                </div>
+                                <label class="switch">
+                    <input type="checkbox" name="show_birthdate" {% if user.show_birthdate %}checked{% endif %}>
+                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-item">
+                                <div class="switch-info">
+                    <h4>Mostrar género</h4>
+                    <p>Hacer visible tu género en el perfil</p>
+                                </div>
+                                <label class="switch">
+                    <input type="checkbox" name="show_gender" {% if user.show_gender %}checked{% endif %}>
+                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-card">
+                        <h3><i class="fas fa-bell"></i> Notificaciones</h3>
+                        
+                        <div class="switch-group">
+                            <div class="switch-item">
+                                <div class="switch-info">
+                    <h4>Notificaciones por email</h4>
+                    <p>Recibir notificaciones importantes por correo electrónico</p>
+                                </div>
+                                <label class="switch">
+                    <input type="checkbox" name="email_notifications" {% if user.settings.email_notifications %}checked{% endif %}>
+                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-item">
+                                <div class="switch-info">
+                    <h4>Notificaciones push</h4>
+                    <p>Recibir notificaciones en tiempo real</p>
+                                </div>
+                                <label class="switch">
+                    <input type="checkbox" name="push_notifications" {% if user.settings.push_notifications %}checked{% endif %}>
+                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-item">
+                                <div class="switch-info">
+                    <h4>Nuevos seguidores</h4>
+                    <p>Notificarme cuando alguien me siga</p>
+                                </div>
+                                <label class="switch">
+                    <input type="checkbox" name="notify_new_follower" {% if user.settings.notify_new_follower %}checked{% endif %}>
+                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-item">
+                                <div class="switch-info">
+                    <h4>Me gusta en publicaciones</h4>
+                    <p>Notificarme cuando gusten mis publicaciones</p>
+                                </div>
+                                <label class="switch">
+                    <input type="checkbox" name="notify_likes" {% if user.settings.notify_likes %}checked{% endif %}>
+                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apariencia -->
+                <div id="appearance" class="tab-content">
+                    <div class="section-card">
+                        <h3><i class="fas fa-paint-brush"></i> Tema de la Interfaz</h3>
+                        
+                        <div class="theme-selector">
+                            <div class="theme-option" data-theme="dark">
+                                <div class="theme-preview dark-theme"></div>
+                                <span>Oscuro</span>
+                            </div>
+                            <div class="theme-option" data-theme="light">
+                                <div class="theme-preview light-theme"></div>
+                                <span>Claro</span>
+                            </div>
+                            <div class="theme-option" data-theme="auto">
+                                <div class="theme-preview auto-theme"></div>
+                                <span>Automático</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-card">
+                        <h3><i class="fas fa-desktop"></i> Densidad de Contenido</h3>
+                        
+                        <div class="density-selector">
+                            <label class="density-option">
+                                <input type="radio" name="content_density" value="compact" checked>
+                                <div class="density-preview compact">
+                                    <span>Compacto</span>
+                                    <small>Más contenido en pantalla</small>
+                                </div>
+                            </label>
+                            
+                            <label class="density-option">
+                                <input type="radio" name="content_density" value="comfortable">
+                                <div class="density-preview comfortable">
+                                    <span>Cómodo</span>
+                                    <small>Espaciado estándar</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para previsualización de imágenes -->
+<div id="image-crop-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Recortar imagen</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="crop-container">
+                <img id="crop-image" src="" alt="Imagen a recortar">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancel-crop">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="apply-crop">Aplicar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/profile_edit.js' %}"></script>
+{% endblock %}

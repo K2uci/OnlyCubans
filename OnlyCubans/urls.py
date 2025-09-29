@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.urls import path, include
+from .views import home_redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', home_redirect, name='home'),
     path('', include('accounts.urls') , name="accounts"),
     path('content/', include('content.urls'), name="content"),
     # path('subscriptions/', include('subscriptions.urls')),

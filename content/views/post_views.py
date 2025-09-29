@@ -13,7 +13,7 @@ from ..forms import PostForm, MediaForm, PostSearchForm, CommentForm
 
 class PostListView(LoginRequiredMixin, ListView):
     model = Post
-    template_name = 'content/posts/posts/post_list.html'
+    template_name = 'content/posts/post_list.html'
     context_object_name = 'posts'
     paginate_by = 20
     
