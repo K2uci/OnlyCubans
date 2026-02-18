@@ -1,85 +1,98 @@
-# Reporte de Vulnerabilidades - API Orquestador Evertec
+# Critical OAuth/SOAP Credential Exposure in Login API Response
 
-**Fecha del Informe:** 30 de Enero de 2026
-**Autor:** Agente de Ciberseguridad Gemini
+**ID:** vuln-0001
+**Severity:** CRITICAL
+**Found:** 2026-02-17 19:10:29 UTC
 
-## Resumen Ejecutivo
+## Description
 
-Durante la evaluación de seguridad de la API "Orquestador Evertec", se han identificado varias vulnerabilidades, entre las que destaca una **falla crítica de control de acceso a nivel de API**. Todo un controlador, que gestiona operaciones sensibles sobre tarjetas y datos de clientes, se encuentra completamente desprotegido, permitiendo que cualquier persona en Internet pueda leer y modificar datos sin ningún tipo de autenticación.
+## Summary
+The MonitorPro application exposes sensitive OAuth2 and SOAP service credentials to all authenticated users through the login API response. This includes client secrets, service passwords, and authentication configuration that should never be transmitted to client applications.
 
-Adicionalmente, se ha detectado que la documentación proporcionada para la autenticación de uno de los controladores es incorrecta, impidiendo el uso legítimo de dicha funcionalidad.
+## Affected Endpoint
+- **URL:** https://almaviva.monitorpro.ai/api/users/login
+- **Method:** POST
+- **Content-Type:** application/json
 
-A continuación, se detallan los hallazgos.
+## Vulnerability Details
+When any user (regardless of role) authenticates to the application, the API response includes the complete customer configuration object containing sensitive service credentials:
 
----
+### Exposed Credentials:
+| Credential | Value | Purpose |
+|------------|-------|---------|
+| passwordSoapService | VlAk13MY9tdBH7t9muhbWwE2jpz3q1 | SOAP Web Service Authentication |
+| client_id | external-client-almavivaglobal01 | OAuth2 Client Identifier |
+| client_secret | MubXNes8ec1vCfGpJpWrAMVivcXKjV9x | OAuth2 Client Secret |
+| userSoapService | ALMAVIVA | SOAP Service Username |
+| grant_type | client_credentials | OAuth2 Grant Type |
 
-## Listado de Hallazgos
+## Proof of Concept
 
-### 1. [CRÍTICO] Falla de Autenticación en el Controlador de Tarjeta de Débito
+### Request:
+```http
+POST /api/users/login HTTP/1.1
+Host: almaviva.monitorpro.ai
+Content-Type: application/json
 
-- **Severidad:** **CRÍTICA**
-- **CWSS:** 9.8 (Acceso No Autenticado a Funcionalidad Crítica)
-- **Descripción:** La totalidad de los endpoints bajo el controlador `/TarjetaDebito` no implementan ningún tipo de validación de autenticación. Esto permite que un atacante anónimo pueda invocar directamente funcionalidades sensibles que deberían estar protegidas, como la consulta de datos de tarjetas, la actualización de datos de clientes y la modificación del estado de las tarjetas. La API procesa las peticiones y las pasa a la lógica de negocio, en lugar de rechazarlas con un error `401 Unauthorized`.
-- **Impacto:** Un atacante puede leer información sensible de tarjetas (potencialmente el PAN completo), modificar datos personales de los clientes (email, teléfono), y alterar el estado de las tarjetas (bloquear, cancelar), causando un impacto directo en la confidencialidad, integridad y disponibilidad de los datos de los clientes.
-- **Endpoints Afectados:**
-    - `GET /TarjetaDebito/ObtenerInfoTarjetaPorNumeroTarjeta`
-    - `POST /TarjetaDebito/ActualizarDatosCliente`
-    - `POST /TarjetaDebito/ActualizarEstado`
-    - `POST /TarjetaDebito/ExcepcionesDeCompras`
-- **Prueba de Concepto (PoC):**
-  Se realiza una petición al endpoint `ActualizarDatosCliente` sin el encabezado `Authorization`. La API responde con un `200 OK` y un error de negocio, en lugar de un `401 Unauthorized`.
+{"email":"admin","password":"1futuro2@26"}
+```
 
-  ```bash
-  curl -s -i -X POST \
-    -H "Content-Type: application/json" \
-    -d '{"NumeroCuentaPayStudio":"1234567890", ...}' \
-    "https://apim-transversal-dev.azure-api.net/orquestadorevertec/TarjetaDebito/ActualizarDatosCliente"
-  ```
-  **Respuesta del Servidor:**
-  ```http
-  HTTP/1.1 200 OK
-  ...
-  {"Success":false,"Error":"El motor de evertec ha devuelto los siguientes errores [{\"ErrorCode\":\"ICS0178\",\"ErrorText\":\"El cliente con documento 0987654321 y tipo de documento 13 no existe\"}]"}
-  ```
-- **Recomendación:** Aplicar de forma mandatoria el middleware de autenticación y autorización (validación de token OAuth2) a nivel del controlador `/TarjetaDebito` y a cada uno de sus endpoints. Toda petición que no contenga un token válido debe ser rechazada con un código de estado `401 Unauthorized`.
+### Response (truncated):
+```json
+{
+  "user": {
+    "_id": "5dcdc96f59f0d52f48207be1",
+    "username": "admin",
+    "customer": {
+      "_id": "5d76977d69b6021ddc86b112",
+      "name": "ALMAVIVA",
+      "document": 800233052,
+      "userSoapService": "ALMAVIVA",
+      "passwordSoapService": "VlAk13MY9tdBH7t9muhbWwE2jpz3q1",
+      "client_id": "external-client-almavivaglobal01",
+      "client_secret": "MubXNes8ec1vCfGpJpWrAMVivcXKjV9x",
+      "grant_type": "client_credentials",
+      "urldomain": "almaviva.monitorpro.ai"
+    }
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
 
----
+## Affected User Roles
+- **Admin Role:** Receives full credentials in login response
+- **Operator Role:** Also receives full credentials in login response (tested with jchacon@intrustsecurity.co)
+- **All authenticated users** are exposed to these credentials
 
+## Impact Assessment
+- **Confidentiality:** CRITICAL - Service credentials exposed to all authenticated users
+- **Integrity:** HIGH - Attackers could use credentials to modify data via SOAP/OAuth services
+- **Availability:** MEDIUM - Credentials could be used for denial of service attacks
 
-### 2. [ALTO] Referencia Insegura y Directa a Objetos (IDOR) sin Autenticación
+### Attack Scenarios:
+1. **Unauthorized SOAP Service Access:** An attacker with any valid user account can extract the SOAP credentials and directly access backend SOAP services, bypassing application-level access controls
+2. **OAuth Token Theft:** Using the client_id and client_secret with grant_type=client_credentials, an attacker can obtain OAuth access tokens for protected resources
+3. **Privilege Escalation:** Low-privilege operators can use these credentials to access administrative functions through the underlying services
+4. **Lateral Movement:** These credentials may be reused across multiple systems, enabling broader network compromise
 
-- **Severidad:** **ALTA** (Considerada Crítica en combinación con el hallazgo #1)
-- **CWSS:** 9.1 (Modificación no Autorizada de Datos)
-- **Descripción:** Como consecuencia directa de la falta de autenticación en el controlador `/TarjetaDebito`, no existe ningún mecanismo que valide que el "dueño" del token (en un escenario normal) esté autorizado para acceder o modificar los datos referenciados. Cualquier atacante puede enviar identificadores (`NumeroDocumento`, `TrackingId`) de cualquier cliente o tarjeta y la API intentará procesar la petición.
-- **Impacto:** Permite a un atacante modificar o leer datos de cualquier usuario del sistema, no solo los propios. Un atacante podría, por ejemplo, bloquear la tarjeta de otro usuario o cambiar sus límites de compra.
-- **Endpoints Afectados:** Todos los endpoints del controlador `/TarjetaDebito`.
-- **Prueba de Concepto (PoC):** La misma PoC del hallazgo #1 demuestra que se puede intentar operar sobre cualquier objeto (`NumeroDocumento: "0987654321"`) sin necesidad de probar la propiedad sobre dicho objeto.
-- **Recomendación:** Además de implementar la autenticación (hallazgo #1), es crucial que la lógica de negocio valide que el `appid` o el `oid` (Object ID) del token de acceso tiene los permisos necesarios para operar sobre el recurso solicitado (la cuenta, la tarjeta, etc.). Por ejemplo, una petición para modificar la tarjeta con `TrackingId: "XYZ"` debe ser validada para asegurar que el dueño del token está asociado a esa tarjeta.
+## CVSS Score
+**CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L - Score: 9.9 (Critical)**
 
----
+## Remediation
 
+### Immediate Actions:
+1. **Remove sensitive credentials from login API response** - The customer object should not include passwordSoapService, client_id, client_secret, or other service credentials
+2. **Rotate all exposed credentials immediately** - All SOAP and OAuth credentials should be considered compromised
+3. **Implement server-side credential storage** - Service credentials should only exist on the server side
 
-### 3. [BAJO] Documentación de Autenticación Incorrecta
+### Long-term Fixes:
+1. Implement proper API response filtering to exclude sensitive fields
+2. Use a dedicated secrets management solution (HashiCorp Vault, AWS Secrets Manager)
+3. Implement the principle of least privilege for credential access
+4. Add API response auditing to detect future credential leaks
+5. Separate service authentication from user authentication flows
 
-- **Severidad:** **BAJA**
-- **CWSS:** 3.1 (Degradación de la Funcionalidad)
-- **Descripción:** La documentación de la API detalla un método para obtener un token de acceso para la API (mediante `client_id` y `client_secret`). Sin embargo, el token generado con estas credenciales es rechazado con un error `401 Unauthorized` por el endpoint `/banking-core`. Esto indica que la documentación es incorrecta o que la política de autorización del endpoint no está configurada para aceptar tokens de esa aplicación cliente (`appid`).
-- **Impacto:** Impide que los desarrolladores legítimos o sistemas automatizados puedan consumir el endpoint `/banking-core` siguiendo la documentación oficial, causando errores de integración y pérdida de tiempo en la depuración.
-- **Prueba de Concepto (PoC):**
-  1. Generar un token con las credenciales de la documentación.
-  2. Usar el token para realizar una petición al endpoint `/banking-core`.
-  ```bash
-  TOKEN="eyJ0eXAiOiJKV1Qi..." # Token generado con credenciales de la documentación
-  curl -s -i -X POST \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $TOKEN" \
-    -d '{"Mti":"0200", ...}' \
-    "https://apim-transversal-dev.azure-api.net/orquestadorevertec/banking-core"
-  ```
-  **Respuesta del Servidor:**
-  ```http
-  HTTP/1.1 401 Unauthorized
-  ...
-  { "statusCode": 401, "message": "Unauthorized. Access token is missing or invalid." }
-  ```
-- **Recomendación:** Revisar y alinear la documentación con la configuración real del gateway de la API. Asegurarse de que las credenciales proporcionadas en la documentación (`client_id`) correspondan a una aplicación cliente que tenga los permisos necesarios para consumir todos los endpoints documentados.
+## References
+- CWE-200: Exposure of Sensitive Information to an Unauthorized Actor
+- CWE-522: Insufficiently Protected Credentials
+- OWASP API Security Top 10 - API3:2023 Broken Object Property Level Authorization
